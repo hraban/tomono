@@ -33,13 +33,22 @@ function redir {
 	# --tag..: Migrate tags, too
 	# -d: Use a temporary directory, if desired (ramdisk for speed)
 	# --all: All branches and tags and, just, everything. \
+	# NB: The sed expression contains a raw tab---don't remove that
 	git filter-branch \
-		-f \
-		--tree-filter "mkdir '$TEMPF' && find . -maxdepth 1 -mindepth 1 -not -name '$TEMPF' -not -name .git  -exec git mv '{}' '$TEMPF/' ';' && git mv '$TEMPF' '$dirname'" \
+		--index-filter '
+			git ls-files --stage | \
+			grep -v "^160000" | \
+			grep -v .gitmodules | \
+			sed -e "s_	_	'"$dirname"'/_" | \
+			GIT_INDEX_FILE="$GIT_INDEX_FILE.new" git update-index --index-info && \
+			mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"' \
 		--tag-name-filter cat \
-		${GIT_TMPDIR:+-d "$GIT_TMPDIR"} \
 		-- \
 		--all
+}
+
+function read_repositories {
+	sed -e 's/#.*//' | grep .
 }
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
@@ -48,16 +57,24 @@ function redir {
 # 1. The (git cloneable) location of the repository
 # 2. The name of the target directory in the core repository
 function create-mono {
-	if [[ -d "$MONOREPO_NAME" ]]; then
-		echo "Target repository directory $MONOREPO_NAME already exists." >&2
-		return 1
+	# Pretty risky, check double-check!
+	if [[ "${1:-}" == "--continue" ]]; then
+		if [[ ! -d "$MONOREPO_NAME" ]]; then
+			echo "--continue specified, but nothing to resume" >&2
+			exit 1
+		fi
+	else
+		if [[ -d "$MONOREPO_NAME" ]]; then
+			echo "Target repository directory $MONOREPO_NAME already exists." >&2
+			return 1
+		fi
+		mkdir "$MONOREPO_NAME"
+		(
+			cd "$MONOREPO_NAME"
+			git init
+		)
 	fi
-	mkdir "$MONOREPO_NAME"
-	(
-		cd "$MONOREPO_NAME"
-		git init
-	)
-	while read repo name; do
+	read_repositories | while read repo name; do
 		if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
@@ -95,10 +112,6 @@ function create-mono {
 	done
 }
 
-function main {
-	create-mono
-}
-
 if [[ "$is_script" == "true" ]]; then
-	main
+	create-mono "${1:-}"
 fi
