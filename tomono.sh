@@ -29,19 +29,22 @@ function redir {
 	# any revision in the entire repo. If it does; probrem.
 	local TEMPF=temp-toDvKEq
 	# -f: Discard backups
-	# --tree-filter: Move all files to a subdirectory
+	# --index-filter: Move all files to a subdirectory
+	#    the two grep lines remove all submodules
 	# --tag..: Migrate tags, too
 	# -d: Use a temporary directory, if desired (ramdisk for speed)
 	# --all: All branches and tags and, just, everything. \
-	# NB: The sed expression contains a raw tab---don't remove that
+	# NB: The sed expression contains raw tabs---don't remove them
+	# NB: When the post update-index index file is empty, it is not created
 	git filter-branch \
+		${GIT_TMPDIR:+-d "$GIT_TMPDIR"} \
 		--index-filter '
 			git ls-files --stage | \
 			grep -v "^160000" | \
 			grep -v .gitmodules | \
 			sed -e "s_	_	'"$dirname"'/_" | \
 			GIT_INDEX_FILE="$GIT_INDEX_FILE.new" git update-index --index-info && \
-			mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"' \
+			mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE" || rm "$GIT_INDEX_FILE"' \
 		--tag-name-filter cat \
 		-- \
 		--all
