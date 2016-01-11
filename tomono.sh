@@ -4,8 +4,8 @@
 # every subrepo to the eponymous branch in the monorepo, with all files
 # (including in the history) rewritten to live under a subdirectory.
 #
-# To use a temporary directory while migrating, set the GIT_TMPDIR envvar. This
-# migration is very I/O heavy so if you have a ramdisk this is a good idea.
+# To use a separate temporary directory while migrating, set the GIT_TMPDIR
+# envvar.
 #
 # To access the individual functions instead of executing main, source this
 # script from bash instead of executing it.
