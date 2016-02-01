@@ -21,38 +21,13 @@ fi
 # Name of the mono repository
 MONOREPO_NAME="core"
 
-# Move all files in every branch in the current working directory's git repo to
-# a subdirectory (as named), including history and tags and everything
-function redir {
-	dirname="${1:?redir requires a subdirectory name to move the files to}"
-	# Temporary directory name---assume this file doesn't exist in the root in
-	# any revision in the entire repo. If it does; probrem.
-	local TEMPF=temp-toDvKEq
-	# -f: Discard backups
-	# --index-filter: Move all files to a subdirectory
-	#    the two grep lines remove all submodules
-	# --tag..: Migrate tags, too
-	# -d: Use a temporary directory, if desired (ramdisk for speed)
-	# --all: All branches and tags and, just, everything. \
-	# NB: The sed expression contains raw tabs---don't remove them
-	# NB: When the post update-index index file is empty, it is not created
-	git filter-branch \
-		${GIT_TMPDIR:+-d "$GIT_TMPDIR"} \
-		--index-filter '
-			git ls-files --stage | \
-			grep -v "^160000" | \
-			grep -v .gitmodules | \
-			sed -e "s_	_	'"$dirname"'/_" | \
-			GIT_INDEX_FILE="$GIT_INDEX_FILE.new" git update-index --index-info && \
-			mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE" || rm "$GIT_INDEX_FILE"' \
-		--tag-name-filter cat \
-		-- \
-		--all
-}
-
 function read_repositories {
 	sed -e 's/#.*//' | grep .
 }
+
+function remote-branches {
+	git branch -r | grep "^  $1/" | sed -e 's_.*/__'
+}	
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
 # one line per repository, with two space separated values:
@@ -66,16 +41,15 @@ function create-mono {
 			echo "--continue specified, but nothing to resume" >&2
 			exit 1
 		fi
+		pushd "$MONOREPO_NAME"
 	else
 		if [[ -d "$MONOREPO_NAME" ]]; then
 			echo "Target repository directory $MONOREPO_NAME already exists." >&2
 			return 1
 		fi
 		mkdir "$MONOREPO_NAME"
-		(
-			cd "$MONOREPO_NAME"
-			git init
-		)
+		pushd "$MONOREPO_NAME"
+		git init
 	fi
 	read_repositories | while read repo name; do
 		if [[ -z "$name" ]]; then
@@ -83,35 +57,28 @@ function create-mono {
 			return 1
 		fi
 		echo "Merging in $repo.." >&2
-		git clone -q --bare "$repo" "$name.git"
-		(
-			cd "$name.git"
-			# Rewrite history first
-			redir "$name"
-		)
+		git remote add "$name" "$repo"
+		git fetch -qa "$name"
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
-		(
-			cd "$MONOREPO_NAME"
-			git remote add "$name" "../$name.git"
-			git fetch -qa "$name"
-			# Silly git branch outputs a * in front of the current branch name..
-			git --git-dir ../"$name.git" branch | tr \* ' ' | while read branch; do
-				if git rev-parse -q --verify "$branch"; then
-					# Branch already exists, just check it out (and clean up the working dir)
-					git checkout -q "$branch"
-					git checkout -q -- .
-					git clean -f -d
-				else
-					# Create a fresh branch with an empty root commit"
-					git checkout -q --orphan "$branch"
-					# The ignore unmatch is necessary when this was a fresh repo
-					git rm -rfq --ignore-unmatch .
-					git commit -q --allow-empty -m "Root commit for $branch branch"
-				fi
-				git merge -q --no-ff -m "Merging $name to $branch" "$name/$branch"
-			done
-		)
+		# Silly git branch outputs a * in front of the current branch name..
+		remote-branches "$name" | while read branch; do
+			if git rev-parse -q --verify "$branch"; then
+				# Branch already exists, just check it out (and clean up the working dir)
+				git checkout -q "$branch"
+				git checkout -q -- .
+				git clean -f -d
+			else
+				# Create a fresh branch with an empty root commit"
+				git checkout -q --orphan "$branch"
+				# The ignore unmatch is necessary when this was a fresh repo
+				git rm -rfq --ignore-unmatch .
+				git commit -q --allow-empty -m "Root commit for $branch branch"
+			fi
+			git merge -q --no-commit -s ours "$name/$branch"
+			git read-tree --prefix="$name/" "$name/$branch"
+			git commit -q -m "Merging $name to $branch"
+		done
 	done
 }
 
