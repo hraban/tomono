@@ -61,7 +61,6 @@ function create-mono {
 		git fetch -qa "$name"
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
-		# Silly git branch outputs a * in front of the current branch name..
 		remote-branches "$name" | while read branch; do
 			if git rev-parse -q --verify "$branch"; then
 				# Branch already exists, just check it out (and clean up the working dir)
@@ -80,6 +79,8 @@ function create-mono {
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
 	done
+	git checkout -q master
+	git checkout -q .
 }
 
 if [[ "$is_script" == "true" ]]; then
