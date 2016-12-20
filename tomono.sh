@@ -26,8 +26,8 @@ function read_repositories {
 }
 
 function remote-branches {
-	git branch -r | grep "^  $1/" | sed -e 's_.*/__'
-}	
+	git branch -r | grep "^  $1/" | sed -e "s_$1/__"
+}
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
 # one line per repository, with two space separated values:
@@ -74,7 +74,7 @@ function create-mono {
 				git rm -rfq --ignore-unmatch .
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
-			git merge -q --no-commit -s ours "$name/$branch"
+			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
 			git read-tree --prefix="$name/" "$name/$branch"
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
