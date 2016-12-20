@@ -26,7 +26,7 @@ function read_repositories {
 }
 
 function remote-branches {
-	git branch -r | grep "^  $1/" | sed -e 's_.*/__'
+	git branch -r | grep "^  $1/" | sed -e "s_$1/__"
 }	
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
