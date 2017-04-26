@@ -4,6 +4,13 @@ Merge multiple repositories into one big monorepository. Migrates every branch i
 every subrepo to the eponymous branch in the monorepo, with all files
 (including in the history) rewritten to live under a subdirectory.
 
+Features:
+
+* Preserve full history and commit hashes of all repositories.
+* Don't Stop The World: keep working in your other repositories during the
+  migration and pull the changes into the monorepo as you go.
+* No conflicts: Each original repository keeps their directory structure, no
+  merging required. All files are moved into a subdirectory.
 
 ## Usage
 
@@ -87,3 +94,16 @@ A detailed explanation of this program can be found in the accompanying blog
 post:
 
 https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
+
+## Further steps
+
+Once your new repository is created, you'll need to update your CI environment.
+This means merging all .travis.yml, .circle.yml and similar files into a single
+file in the top level. The same holds for the Makefile, which can branch off
+into the separate subdirectories to do independent work there.
+
+Additionally, you will need to make a decision about vendoring, if applicable:
+do you want to use one vendoring dir for all your code (e.g. a top-level
+`vendor` for Go, or `node_modules` for node), or do you want to keep independent
+vendoring directories for each project? Both solutions have their respective
+pros and cons, which is best depends on your situation.
