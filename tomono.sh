@@ -18,8 +18,6 @@ else
 	is_script=false
 fi
 
-# Name of the mono repository
-MONOREPO_NAME="core"
 
 function read_repositories {
 	sed -e 's/#.*//' | grep .
@@ -35,6 +33,11 @@ function remote-branches {
 # 1. The (git cloneable) location of the repository
 # 2. The name of the target directory in the core repository
 function create-mono {
+	echo "mono-repo ssh url: " $1
+	url=$1
+    echo "mono-repo name: " $2
+    MONOREPO_NAME=$2
+
 	# Pretty risky, check double-check!
 	if [[ "${1:-}" == "--continue" ]]; then
 		if [[ ! -d "$MONOREPO_NAME" ]]; then
@@ -59,6 +62,21 @@ function create-mono {
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
 		git fetch -qa "$name"
+
+		for tag in `git tag`; do
+			if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
+			  fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
+			  echo $tag '-->' $fixed_tag
+			  git tag -a $fixed_tag -m ""
+			  git tag -d $tag
+			elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
+			  fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
+			  echo $tag '-->' $fixed_tag
+			  git tag -a $fixed_tag -m ""
+			  git tag -d $tag
+			fi;
+		done
+
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
 		remote-branches "$name" | while read branch; do
@@ -81,8 +99,11 @@ function create-mono {
 	done
 	git checkout -q master
 	git checkout -q .
+	git remote add origin $url
+	git push --all origin
+	git push --tags
 }
 
 if [[ "$is_script" == "true" ]]; then
-	create-mono "${1:-}"
+	create-mono $1 $2
 fi
