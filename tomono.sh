@@ -63,20 +63,8 @@ function create-mono {
 		git remote add "$name" "$repo"
 		git fetch -qa "$name"
 
-		for tag in `git tag`; do
-			if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
-			  fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
-			  echo $tag '-->' $fixed_tag
-			  git tag -a $fixed_tag -m ""
-			  git tag -d $tag
-			elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
-			  fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
-			  echo $tag '-->' $fixed_tag
-			  git tag -a $fixed_tag -m ""
-			  git tag -d $tag
-			fi;
-		done
-
+                
+ 
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
 		remote-branches "$name" | while read branch; do
@@ -96,8 +84,26 @@ function create-mono {
 			git read-tree --prefix="$name/" "$name/$branch"
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
+                
+                for tag in `git tag`; do
+                        if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
+                          fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
+                          echo $tag '-->' $fixed_tag
+                          git tag -a $fixed_tag -m ""
+                          git tag -d $tag
+                        elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
+                          fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
+                          echo $tag '-->' $fixed_tag
+                          git tag -a $fixed_tag -m ""
+                          git tag -d $tag
+                        fi;
+                done
+
+                echo 'finished changing tags (not pushed yet)'
+ 
 	done
-	git checkout -q master
+	
+        git checkout -q master
 	git checkout -q .
 	git remote add origin $url
 	git push --all origin
