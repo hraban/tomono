@@ -53,6 +53,7 @@ function create-mono {
 		mkdir "$MONOREPO_NAME"
 		pushd "$MONOREPO_NAME"
 		git init
+		git remote add origin $url
 	fi
 	read_repositories | while read repo name; do
 		if [[ -z "$name" ]]; then
@@ -85,14 +86,14 @@ function create-mono {
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
                 
-        for tag in `git tag`; do
+        for tag in `git ls-remote --tags $name | cut -f2 | grep -v "\^{}$" | sed -E 's/.*(RC;.*)/\1/g'`; do
 		  if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
-		    fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
+		    fixed_tag=`echo $tag | sed -E "s/RC;.;(.*)/RC;$name;\2/" `
 		    echo $tag '-->' $fixed_tag
 		    git tag $fixed_tag $tag
 		    git tag -d $tag
 		  elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
-		    fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
+		    fixed_tag=`echo $tag | sed -E "s/RC;(.*);(.*)/RC;$name\/\2;\3/" `
 		    echo $tag '-->' $fixed_tag
 		    git tag $fixed_tag $tag
 		    git tag -d $tag
@@ -105,7 +106,6 @@ function create-mono {
 	
     git checkout -q master
 	git checkout -q .
-	git remote add origin $url
 	git push --all origin
 	git push --tags
 }
