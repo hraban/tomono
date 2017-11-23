@@ -85,21 +85,21 @@ function create-mono {
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
                 
-            for tag in `git tag`; do
-			  if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
-			    fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
-			    echo $tag '-->' $fixed_tag
-			    git tag $fixed_tag $tag
-			    git tag -d $tag
-			  elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
-			    fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
-			    echo $tag '-->' $fixed_tag
-			    git tag $fixed_tag $tag
-			    git tag -d $tag
-			  fi;
-			done
+        for tag in `git tag`; do
+		  if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
+		    fixed_tag=`echo $tag | sed -E "s/(.*)RC;.;(.*)/\1RC;$name;\2/" `
+		    echo $tag '-->' $fixed_tag
+		    git tag $fixed_tag $tag
+		    git tag -d $tag
+		  elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
+		    fixed_tag=`echo $tag | sed -E "s/(.*)RC;(.*);(.*)/\1RC;$name\/\2;\3/" `
+		    echo $tag '-->' $fixed_tag
+		    git tag $fixed_tag $tag
+		    git tag -d $tag
+		  fi;
+		done
 
-            echo 'finished changing tags (not pushed yet)'
+        echo 'finished changing tags (not pushed yet)'
  
 	done
 	
@@ -111,5 +111,5 @@ function create-mono {
 }
 
 if [[ "$is_script" == "true" ]]; then
-	create-mono $1 $2 $3
+	create-mono $@
 fi
