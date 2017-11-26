@@ -88,12 +88,12 @@ function create-mono {
                 
         for tag in `git ls-remote --tags $name | cut -f2 | grep -v "\^{}$" | sed -E 's/.*(RC;.*)/\1/g'`; do
 		  if [[ $tag =~ (.*)RC\;\.\;(.*) ]]; then
-		    fixed_tag=`echo $tag | sed -E "s/RC;.;(.*)/RC;$name;\2/" `
+		    fixed_tag=`echo $tag | sed -E "s/RC;.;(.*)/RC;$name;\1/" `
 		    echo $tag '-->' $fixed_tag
 		    git tag $fixed_tag $tag
 		    git tag -d $tag
 		  elif [[ $tag =~ (.*)RC\;(.*)\;(.*) ]]; then
-		    fixed_tag=`echo $tag | sed -E "s/RC;(.*);(.*)/RC;$name\/\2;\3/" `
+		    fixed_tag=`echo $tag | sed -E "s/RC;(.*);(.*)/RC;$name\/\1;\2/" `
 		    echo $tag '-->' $fixed_tag
 		    git tag $fixed_tag $tag
 		    git tag -d $tag
