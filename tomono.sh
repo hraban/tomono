@@ -64,8 +64,6 @@ function create-mono {
 		git remote add "$name" "$repo"
 		git fetch -qa "$name"
 
-                
- 
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
 		remote-branches "$name" | while read branch; do
@@ -81,9 +79,15 @@ function create-mono {
 				git rm -rfq --ignore-unmatch .
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
-			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
-			git read-tree --prefix="$name/" "$name/$branch"
-			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
+			####
+	        git checkout -b "$name"-"$branch" "$name"/"$branch"
+	        mkdir "$name"
+	        find . -depth 1 -not -path ./.git -not -path ./"$name" -exec git mv {} "$name" \;
+	        git commit -q -m "Moving into subdir $name to prepare for consolidation"
+	        git checkout -q "$branch"
+	        git merge -q "$name"-"$branch" --allow-unrelated-histories
+	        git branch -q -D "$name"-"$branch"
+	 		####
 		done
                 
         for tag in `git ls-remote --tags $name | cut -f2 | grep -v "\^{}$" | sed -E 's/.*(RC;.*)/\1/g'`; do
