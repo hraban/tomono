@@ -80,6 +80,8 @@ function create-mono {
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
 			####
+			# In order to preserve history per file, we move the files before merging
+			# We do this in a new local branch, without pushing the move to original repo
 	        git checkout -b "$name"-"$branch" "$name"/"$branch"
 	        mkdir "$name"
 	        find . -depth 1 -not -path ./.git -not -path ./"$name" -exec git mv {} "$name" \;
