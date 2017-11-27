@@ -84,7 +84,7 @@ function create-mono {
 			# We do this in a new local branch, without pushing the move to original repo
 	        git checkout -b "$name"-"$branch" "$name"/"$branch"
 	        mkdir "$name"
-	        find . -depth 1 -not -path ./.git -not -path ./"$name" -exec git mv {} "$name" \;
+	        find * -maxdepth 0 -not -path .git -not -path "$name" -exec git mv {} "$name" \;
 	        git commit -q -m "Moving into subdir $name to prepare for consolidation"
 	        git checkout -q "$branch"
 	        git merge -q "$name"-"$branch" --allow-unrelated-histories
