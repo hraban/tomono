@@ -85,7 +85,7 @@ function create-mono {
             temp_branch="$name-$branch"
             git checkout -b "$temp_branch" "$name"/"$branch"
             mkdir "$name"
-            find * -maxdepth 0 -not -path .git -not -path "$name" -exec git mv {} "$name" \;
+            find . -depth 1 \( -not -path ./.git -pune \) -not -path "./$name" -exec git mv {} "$name" \;
             git commit -q -m "Moving into subdir $name to prepare for consolidation"
             git checkout -q "$branch"
             git merge -q "$temp_branch" --allow-unrelated-histories
