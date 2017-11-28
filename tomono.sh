@@ -87,6 +87,8 @@ function create-mono {
             mkdir "$name"
             find . -depth 1 \( -not -path ./.git -prune \) -not -path "./$name" -exec git mv {} "$name" \;
             git commit -q -m "Moving into subdir $name to prepare for consolidation"
+            FIRST=`git rev-list --max-parents=0 --abbrev-commit HEAD`
+            git filter-branch -f --msg-filter 'sed "s/^/[$name]/"' $FIRST..HEAD
             git checkout -q "$branch"
             git merge -q "$temp_branch" --allow-unrelated-histories
             git branch -q -D "$temp_branch"
