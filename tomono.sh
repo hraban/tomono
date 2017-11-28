@@ -82,13 +82,14 @@ function create-mono {
 			####
 			# In order to preserve history per file, we move the files before merging
 			# We do this in a new local branch, without pushing the move to original repo
-	        git checkout -b "$name"-"$branch" "$name"/"$branch"
+			temp_branch="$name-$branch"
+	        git checkout -b "$temp_branch" "$name"/"$branch"
 	        mkdir "$name"
 	        find * -maxdepth 0 -not -path .git -not -path "$name" -exec git mv {} "$name" \;
 	        git commit -q -m "Moving into subdir $name to prepare for consolidation"
 	        git checkout -q "$branch"
-	        git merge -q "$name"-"$branch" --allow-unrelated-histories
-	        git branch -q -D "$name"-"$branch"
+	        git merge -q "$temp_branch" --allow-unrelated-histories
+	        git branch -q -D "$temp_branch"
 	 		####
 		done
                 
