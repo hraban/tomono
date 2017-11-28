@@ -79,15 +79,11 @@ function create-mono {
                 git rm -rfq --ignore-unmatch .
                 git commit -q --allow-empty -m "Root commit for $branch branch"
             fi
+            
             ####
-            # In order to preserve history per file, we move the files before merging
-            # We do this in a new local branch, without pushing the move to original repo
             temp_branch="$name-$branch"
             git checkout -b "$temp_branch" "$name"/"$branch"
-            mkdir "$name"
-            find . -depth 1 \( -not -path ./.git -prune \) -not -path "./$name" -exec git mv {} "$name" \;
-            git commit -q -m "Moving into subdir $name to prepare for consolidation"
-            git filter-branch -f --msg-filter "printf '[%s] ' $name && cat" @
+            git filter-branch -f --index-filter 'git ls-files -s | sed "s~\(	\)\(.*\)~\1'"$name"'/\2~" | GIT_INDEX_FILE=$GIT_INDEX_FILE.new git update-index --index-info && mv "$GIT_INDEX_FILE.new" "$GIT_INDEX_FILE"' @
             git checkout -q "$branch"
             git merge -q "$temp_branch" --allow-unrelated-histories
             git branch -q -D "$temp_branch"
