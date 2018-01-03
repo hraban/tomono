@@ -58,6 +58,7 @@ function create-mono {
 		fi
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
+		echo "Fetching $name.." >&2 
 		git fetch -qa "$name"
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
