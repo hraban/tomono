@@ -21,12 +21,33 @@ fi
 # Default name of the mono repository (override with envvar)
 : "${MONOREPO_NAME=core}"
 
+# Monorepo directory
+monorepo_dir="$PWD/$MONOREPO_NAME"
+
+
+
+##### FUNCTIONS
+
+# Silent pushd/popd
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
 function read_repositories {
 	sed -e 's/#.*//' | grep .
 }
 
+# List all branches for a given remote
 function remote-branches {
-	git branch -r | grep "^  $1/" | sed -e "s_$1/__"
+	# Ensure we're always in git root
+	pushd "$monorepo_dir"
+	# Cleanest way to list all branches without text editing rigmarole
+	ls ".git/refs/remotes/$1/"
+	popd
 }
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
