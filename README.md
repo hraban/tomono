@@ -37,6 +37,14 @@ This will create a new repository called `core`, in your current directory.
 If you already have a repository called `core` and wish to import more into it,
 pass the `--continue` flag. Make sure you don't have any outstanding changes!
 
+To change the name of the monorepo directory, set an envvar before any other
+operations:
+
+```sh
+$ export MONOREPO_NAME=my_directory
+$ ...
+```
+
 ## Fluid migration: Don't Stop The World
 
 New changes to the old repositories can be imported into the monorepo and

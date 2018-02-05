@@ -18,8 +18,8 @@ else
 	is_script=false
 fi
 
-# Name of the mono repository
-MONOREPO_NAME="core"
+# Default name of the mono repository (override with envvar)
+: "${MONOREPO_NAME=core}"
 
 function read_repositories {
 	sed -e 's/#.*//' | grep .
