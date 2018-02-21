@@ -12,6 +12,9 @@ Features:
 * No conflicts: Each original repository keeps their directory structure, no
   merging required. All files are moved into a subdirectory.
 
+Requirements:
+* git version 2.9+.
+
 ## Usage
 
 Prepare a list of repositories to merge in a file, for example repos.txt:
