@@ -41,12 +41,25 @@ function read_repositories {
 	sed -e 's/#.*//' | grep .
 }
 
+# Simply list all files, recursively. No directories.
+function ls-files-recursive {
+	find . -type f | sed -e 's!..!!'
+}
+
 # List all branches for a given remote
 function remote-branches {
-	# Ensure we're always in git root
-	pushd "$monorepo_dir"
-	# Cleanest way to list all branches without text editing rigmarole
-	ls ".git/refs/remotes/$1/"
+	# With GNU find, this could have been:
+	#
+	#   find "$dir/.git/yada/yada" -type f -printf '%P\n'
+	#
+	# but it's not a real shell script if it's not compatible with a 14th
+	# century OS from planet zorploid borploid.
+
+	# Get into that git plumbing.  Cleanest way to list all branches without
+	# text editing rigmarole (hard to find a safe escape character, as we've
+	# noticed. People will put anything in branch names).
+	pushd "$monorepo_dir/.git/refs/remotes/$1/"
+	ls-files-recursive
 	popd
 }
 
