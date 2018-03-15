@@ -76,6 +76,9 @@ function create-mono {
 		if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
+		elif [[ "$name" = */* ]]; then
+			echo "Forward slash '/' not supported in repo names: $name" >&2
+			return 1
 		fi
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
