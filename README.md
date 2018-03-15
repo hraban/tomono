@@ -45,6 +45,23 @@ $ export MONOREPO_NAME=my_directory
 $ ...
 ```
 
+### Tags and namespacing
+
+Note that all tags are namespaced by default: e.g. if your remote `foo` has tags
+`v1` and `v2`, your new monorepo will have tags `foo/v1` and `foo/v2`. If you'd
+rather not have this, and just risk the odd tag clash (not a big deal: worst
+case one tag overrides the other), you can do the following _after_ running the
+full script:
+
+```sh
+$ ....tomono.sh # after this
+$ cd core
+$ rm -rf .git/refs/tags
+$ git fetch --all
+```
+
+That will re-fetch all tags for you, verbatim.
+
 ## Fluid migration: Don't Stop The World
 
 New changes to the old repositories can be imported into the monorepo and
@@ -54,7 +71,7 @@ changes in:
 
 ```sh
 # Fetch all changes to the old repositories
-$ git fetch --all
+$ git fetch --all --no-tags
 $ git checkout my_branch
 $ git merge --strategy recursive --strategy-option subtree=one/ one/my_branch
 ```
@@ -62,6 +79,11 @@ $ git merge --strategy recursive --strategy-option subtree=one/ one/my_branch
 This is a regular merge like you are used to (recursive is the default). The
 only special thing about it is the `--strategy-option subtree=one/`: this tells
 git that the files have all been moved to a subdirectory called `one`.
+
+N.B.: new tags won't be merged, because they would not be namespaced if fetched
+this way. If you don't mind having all your tags together in the same scope,
+follow the "no namespaced tags" instructions from above, and remove the
+`--no-tags` bit, here.
 
 ### Github branch protection
 
@@ -74,7 +96,7 @@ If:
 you could create a PR from the changes instead of directly merging into master:
 
 ```sh
-$ git fetch --all
+$ git fetch --all --no-tags
 # Checkout to master first to make sure we're basing this off the latest master
 $ git checkout master
 # Now the new "some_branch" will be where our current master is
