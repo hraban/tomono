@@ -101,7 +101,7 @@ function create-mono {
 
         echo "Merging in $repo.." >&2
         git remote add "$name" "$repo"
-        echo "Fetching $name.." >&2 
+        echo "Fetching $name.." >&2
         git fetch -q "$name"
 
         # Now we've got all tags in .git/refs/tags: put them away for a sec
