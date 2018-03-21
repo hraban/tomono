@@ -89,7 +89,7 @@ function create-mono {
 	# This directory will contain all final tag refs (namespaced)
 	mkdir -p .git/refs/namespaced-tags
 
-	read_repositories | while read repo name; do
+	read_repositories | while read repo name folder; do
 
 		if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
@@ -98,6 +98,11 @@ function create-mono {
 			echo "Forward slash '/' not supported in repo names: $name" >&2
 			return 1
 		fi
+
+                if [[ -z "$folder" ]]; then
+			folder="$name"
+                fi
+
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
 		echo "Fetching $name.." >&2 
@@ -124,7 +129,7 @@ function create-mono {
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
 			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
-			git read-tree --prefix="$name/" "$name/$branch"
+			git read-tree --prefix="$folder/" "$name/$branch"
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
 	done
