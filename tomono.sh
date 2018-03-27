@@ -21,6 +21,10 @@ fi
 # Default name of the mono repository (override with envvar)
 : "${MONOREPO_NAME=core}"
 
+# You can also use the PREFIX envvar. This value will be prepended to the
+# new paths of incoming repositories. It is expected to end in a slash but
+# should work without it.
+
 # Monorepo directory
 monorepo_dir="$PWD/$MONOREPO_NAME"
 
@@ -124,7 +128,7 @@ function create-mono {
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
 			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
-			git read-tree --prefix="$name/" "$name/$branch"
+			git read-tree --prefix="$PREFIX$name/" "$name/$branch"
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
 	done
