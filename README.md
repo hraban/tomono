@@ -48,6 +48,18 @@ $ export MONOREPO_NAME=my_directory
 $ ...
 ```
 
+If you are planning to use a package like [Lerna](https://lernajs.io/) then you
+might need the incoming repositories to be in a subfolder of the repo. To
+accomplish that, use the `PREFIX` envvar:
+
+```sh
+$ export PREFIX=packages/
+$ ...
+```
+
+Note the slash at the end — if you omit it then your repositories will be
+placed in the root but with this string prepended to their names.
+
 ### Tags and namespacing
 
 Note that all tags are namespaced by default: e.g. if your remote `foo` has tags
