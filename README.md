@@ -17,16 +17,22 @@ Requirements:
 
 ## Usage
 
-Prepare a list of repositories to merge in a file, for example repos.txt:
+Prepare a list of repositories to merge in a file. The format is
+`<repository_url><space><new_name>`. If you try and use a slash in
+`<new_name>` it will fail because it uses this as a `git remote`. If
+you need to have a slash, i.e. some folder depth, pass a third
+parameter, the format will then be:
+`<repository_url><space><new_name><space><folder_name>`
+
+Here is an example `repos.txt` where the services are directly in the
+root of the repository and the libraries are in a `/lib` subfolder:
 
 ```
 git@github.com:mycompany/service-one.git one
 git@github.com:mycompany/service-two.git two
-git@github.com:mycompany/service-three.git three
+git@github.com:mycompany/library-three.git three lib/three
+git@github.com:mycompany/library-four.git four lib/four
 ```
-
-The format is: `<repository_url><space><new_name>`. The repository url can be
-anything that can be passed to `git clone`.
 
 Now pipe the file to the tomono.sh script. Assuming you've downloaded this
 program to your home directory, for example, you can do:
