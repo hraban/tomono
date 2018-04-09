@@ -103,7 +103,6 @@ function create-mono {
 			folder="$name"
                 fi
 
-
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
 		echo "Fetching $name.." >&2 
