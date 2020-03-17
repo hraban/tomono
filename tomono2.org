@@ -1,8 +1,18 @@
-* tomono
+#+TITLE:        Tomono — Multi- to Monorepo Migration
+#+DESCRIPTION:  Migrate your multirepo to a monorepo using a bash script
+#+AUTHOR:       Hraban Luyat
+#+EMAIL:        hraban@0brg.net
+#+PROPERTY:     header-args :noweb no-export
 
-Merge multiple repositories into one single repo.
+* Motivation
 
-#+BEGIN_SRC sh :tangle tomono :noweb yes
+TODO: Explain why you'd wanna do this. Trade-offs, etc.
+
+* Implementation
+
+The outer program structure is a flat bash script which loops over every repo supplied over stdin.
+
+#+BEGIN_SRC sh :tangle tomono
 #!/usr/bin/env bash
 
 <<set-flags>>
@@ -44,7 +54,9 @@ git checkout --subtree=...
 git merge ...
 #+END_SRC
 
-** Set up the final monorepo directory
+** Set up the monorepo directory
+
+We create a fresh directory for this script to run in, and bail if it already exists to avoid mangling an existing repo.
 
 #+NAME: prep-dir
 #+BEGIN_SRC sh
@@ -92,7 +104,7 @@ set -euo pipefail ${DEBUGSH+-x}
 
 
 * Copyright and license
-  
+
 This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start. The license and copyright attribution of this entire document can now be set:
 
 #+NAME: copyright
