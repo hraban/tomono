@@ -163,14 +163,6 @@ done
 # <<copyright>>
 #+END_SRC
 
-:REFERENCES:
-References:
-- [[copyright][copyright]]
-- [[handle-remote][handle-remote]]
-- [[prep-dir][prep-dir]]
-- [[set-flags][set-flags]]
-:END:
-
 ** Per repository
 
 Every repository is fetched and fully handled individually, and sequentially. First, fetch all the data related to this repository, then immediately check out and initialise every single branch which belongs to that repository.
@@ -184,14 +176,6 @@ Every repository is fetched and fully handled individually, and sequentially. Fi
       <<handle-branch>>
   done
 #+END_SRC
-
-:REFERENCES:
-References:
-- [[handle-branch][handle-branch]]
-- [[list-branches][list-branches]]
-Used in:
-- [[top-level][top-level]]
-:END:
 
 ** Per branch
 
