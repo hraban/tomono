@@ -73,9 +73,9 @@ function remote-branches {
 # 2. The name of the target directory in the core repository
 function create-mono {
 	# Pretty risky, check double-check!
-	if [[ "${1:-}" == "--continue" ]]; then
+	if [[ ("${1:-}" == "--continue") || ("${1:-}" == "--just-remotes") ]]; then
 		if [[ ! -d "$MONOREPO_NAME" ]]; then
-			echo "--continue specified, but nothing to resume" >&2
+			echo "Continuation specified, but nothing to resume" >&2
 			exit 1
 		fi
 		pushd "$MONOREPO_NAME"
@@ -110,6 +110,10 @@ function create-mono {
 		git remote add "$name" "$repo" || echo "Remote $name already exists"
 		echo "Fetching $name.." >&2 
 		git fetch -q "$name"
+
+		if [[ "${1:-}" == "--just-remotes" ]]; then
+			continue
+		fi
 
 		# Now we've got all tags in .git/refs/tags: put them away for a sec
 		if [[ -n "$(ls .git/refs/tags)" ]]; then
