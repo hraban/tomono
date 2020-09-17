@@ -108,12 +108,12 @@ function create-mono {
 
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo" || echo "Remote $name already exists"
-		echo "Fetching $name.." >&2 
-		git fetch -q "$name"
-
 		if [[ "${1:-}" == "--just-remotes" ]]; then
 			continue
 		fi
+
+		echo "Fetching $name.." >&2 
+		git fetch -q "$name"
 
 		# Now we've got all tags in .git/refs/tags: put them away for a sec
 		if [[ -n "$(ls .git/refs/tags)" ]]; then
