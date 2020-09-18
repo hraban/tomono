@@ -73,7 +73,7 @@ function remote-branches {
 # 2. The name of the target directory in the core repository
 function create-mono {
 	# Pretty risky, check double-check!
-	if [[ ("${1:-}" == "--continue") || ("${1:-}" == "--just-remotes") ]]; then
+	if [[ ("${1:-}" == "--continue") || ("${1:-}" == "--maintain") || ("${1:-}" == "--just-remotes") ]]; then
 		if [[ ! -d "$MONOREPO_NAME" ]]; then
 			echo "Continuation specified, but nothing to resume" >&2
 			exit 1
@@ -139,6 +139,12 @@ function create-mono {
 			if [[ -d "$folder" ]]; then
 				if [[ "${1:-}" == "--continue" ]]; then
 					echo "--continue specified, $folder already exists, skipping"
+					continue
+				fi
+
+				if [[ "${1:-}" == "--maintain" ]]; then
+					echo "--maintain specified, $folder already exists, merging using subtree"
+					git merge --strategy recursive --strategy-option subtree="$folder/" "$name/$branch"
 					continue
 				fi
 			fi
