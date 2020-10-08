@@ -92,6 +92,12 @@ function create-mono {
 	# This directory will contain all final tag refs (namespaced)
 	mkdir -p .git/refs/namespaced-tags
 
+	if [[ "${1:-}" == "--maintain" ]]; then
+		git checkout $MAIN_BRANCH || git checkout -b $MAIN_BRANCH --track "origin/$MAIN_BRANCH"
+		git clean -f -d
+		git pull
+	fi
+
 	read_repositories | while read repo name folder; do
 
 		if [[ -z "$name" ]]; then
@@ -114,6 +120,19 @@ function create-mono {
 
 		echo "Fetching $name.." >&2 
 		git fetch -q "$name"
+
+		if [[ "${1:-}" == "--maintain" ]]; then
+			if [[ -d "$folder" ]]; then
+				if git rev-parse -q --verify "$name/$MAIN_BRANCH"; then
+					echo "--maintain specified, $folder already exists, merging using subtree"
+					git merge --strategy recursive --strategy-option subtree="$folder/" "$name/$MAIN_BRANCH"
+				fi
+				continue
+			else
+				echo "--maintain specified, $folder does not exist, unable to merge"
+				continue
+			fi
+		fi
 
 		# Now we've got all tags in .git/refs/tags: put them away for a sec
 		if [[ -n "$(ls .git/refs/tags)" ]]; then
@@ -139,12 +158,6 @@ function create-mono {
 			if [[ -d "$folder" ]]; then
 				if [[ "${1:-}" == "--continue" ]]; then
 					echo "--continue specified, $folder already exists, skipping"
-					continue
-				fi
-
-				if [[ "${1:-}" == "--maintain" ]]; then
-					echo "--maintain specified, $folder already exists, merging using subtree"
-					git merge --strategy recursive --strategy-option subtree="$folder/" "$name/$branch"
 					continue
 				fi
 			fi
