@@ -21,46 +21,23 @@ fi
 # Default name of the mono repository (override with envvar)
 : "${MONOREPO_NAME=core}"
 
-# Monorepo directory
-monorepo_dir="$PWD/$MONOREPO_NAME"
-
-
-
-##### FUNCTIONS
-
-# Silent pushd/popd
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
-
 function read_repositories {
 	sed -e 's/#.*//' | grep .
 }
 
-# Simply list all files, recursively. No directories.
-function ls-files-recursive {
-	find . -type f | sed -e 's!..!!'
-}
-
 # List all branches for a given remote
 function remote-branches {
-	# With GNU find, this could have been:
-	#
-	#   find "$dir/.git/yada/yada" -type f -printf '%P\n'
-	#
-	# but it's not a real shell script if it's not compatible with a 14th
-	# century OS from planet zorploid borploid.
+	git ls-remote --heads --refs "$1" | sed 's#.*refs/heads/##'
+}
 
-	# Get into that git plumbing.  Cleanest way to list all branches without
-	# text editing rigmarole (hard to find a safe escape character, as we've
-	# noticed. People will put anything in branch names).
-	pushd "$monorepo_dir/.git/refs/remotes/$1/"
-	ls-files-recursive
-	popd
+# List all tags for a given remote
+function remote-tags {
+	git ls-remote --tags --refs "$1" | sed 's#.*refs/tags/##'
+}
+
+# Wrapper for fetching further information about a tag
+function tag-info {
+	git for-each-ref "refs/tags/${1}" --format="%(${2})"
 }
 
 # Create a monorepository in a directory "core". Read repositories from STDIN:
@@ -86,11 +63,7 @@ function create-mono {
 		git init
 	fi
 
-	# This directory will contain all final tag refs (namespaced)
-	mkdir -p .git/refs/namespaced-tags
-
-	read_repositories | while read repo name folder; do
-
+	read_repositories | while read -r repo name folder; do
 		if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
@@ -105,17 +78,32 @@ function create-mono {
 
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
-		echo "Fetching $name.." >&2 
+		echo "Fetching $name.." >&2
 		git fetch -q "$name"
 
-		# Now we've got all tags in .git/refs/tags: put them away for a sec
-		if [[ -n "$(ls .git/refs/tags)" ]]; then
-			mv .git/refs/tags ".git/refs/namespaced-tags/$name"
-		fi
+		# Copy tags including their proper content
+		remote-tags "$name" | while read -r tag; do
+			echo "Copying tag ${tag} over to ${name}/${tag}..."
+
+			(
+				GIT_COMMITTER_NAME="$(tag-info "$tag" "taggername")"
+				GIT_COMMITTER_EMAIL="$(tag-info "$tag" "taggeremail")"
+				GIT_COMMITTER_DATE="$(tag-info "$tag" "taggerdate")"
+
+				contents=$(tag-info "$tag" "contents")
+				if [[ -n "$contents" ]]; then
+					git tag -a -m "$contents" "${name}/${tag}" "${tag}^{}"
+				else
+					git tag "${name}/${tag}" "${tag}^{}"
+				fi
+			)
+
+			git tag -d "$tag"
+		done
 
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
-		remote-branches "$name" | while read branch; do
+		remote-branches "$name" | while read -r branch; do
 			if git rev-parse -q --verify "$branch"; then
 				# Branch already exists, just check it out (and clean up the working dir)
 				git checkout -q "$branch"
@@ -133,10 +121,6 @@ function create-mono {
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
 	done
-
-	# Restore all namespaced tags
-	rm -rf .git/refs/tags
-	mv .git/refs/namespaced-tags .git/refs/tags
 
 	git checkout -q master
 	git checkout -q .
