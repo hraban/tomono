@@ -118,7 +118,7 @@ function create-mono {
 			fi
 			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
 			git read-tree --prefix="$folder/" "$name/$branch"
-			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
+			git commit -q --no-verify --allow-empty -m "Merge branch '$name/$branch' into '$branch'"
 		done
 	done
 
