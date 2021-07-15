@@ -11,7 +11,7 @@
 # script from bash instead of executing it.
 
 ${DEBUGSH:+set -x}
-if [[ "$BASH_SOURCE" == "$0" ]]; then
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
 	is_script=true
 	set -eu -o pipefail
 else
@@ -55,7 +55,7 @@ function create-mono {
 		pushd "$MONOREPO_NAME"
 	else
 		if [[ -d "$MONOREPO_NAME" ]]; then
-			echo "Target repository directory $MONOREPO_NAME already exists." >&2
+			echo "Target repository directory ${MONOREPO_NAME} already exists." >&2
 			return 1
 		fi
 		mkdir "$MONOREPO_NAME"
@@ -68,7 +68,7 @@ function create-mono {
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
 		elif [[ "$name" = */* ]]; then
-			echo "Forward slash '/' not supported in repo names: $name" >&2
+			echo "Forward slash '/' not supported in repo names: ${name}" >&2
 			return 1
 		fi
 
@@ -76,9 +76,9 @@ function create-mono {
 			folder="$name"
                 fi
 
-		echo "Merging in $repo.." >&2
+		echo "Merging in ${repo}..." >&2
 		git remote add "$name" "$repo"
-		echo "Fetching $name.." >&2
+		echo "Fetching ${name}..." >&2
 		git fetch -q "$name"
 
 		# Copy tags including their proper content
@@ -116,9 +116,10 @@ function create-mono {
 				git rm -rfq --ignore-unmatch .
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
-			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
-			git read-tree --prefix="$folder/" "$name/$branch"
-			git commit -q --no-verify --allow-empty -m "Merge branch '$name/$branch' into '$branch'"
+
+			git merge -q --no-commit -s ours "${name}/${branch}" --allow-unrelated-histories
+			git read-tree --prefix="${folder}/" "${name}/${branch}"
+			git commit -q --no-verify --allow-empty -m "Merge branch '${name}/${branch}' into '${branch}'"
 		done
 	done
 
