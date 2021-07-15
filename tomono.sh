@@ -123,7 +123,7 @@ function create-mono {
 		done
 	done
 
-	git checkout -q master
+	git checkout -q "$(git config --default "main" --get init.defaultBranch)"
 	git checkout -q .
 }
 
