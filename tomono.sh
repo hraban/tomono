@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Merge multiple repositories into one big monorepo. Migrates every branch in
 # every subrepo to the eponymous branch in the monorepo, with all files
