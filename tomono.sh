@@ -24,7 +24,8 @@ fi
 # Monorepo directory
 monorepo_dir="$PWD/$MONOREPO_NAME"
 
-
+# Name of the default repository branch (override with envvar)
+: "${MONOREPO_BRANCH=master}"
 
 ##### FUNCTIONS
 
@@ -138,7 +139,7 @@ function create-mono {
 	rm -rf .git/refs/tags
 	mv .git/refs/namespaced-tags .git/refs/tags
 
-	git checkout -q master
+	git checkout -q "$MONOREPO_BRANCH"
 	git checkout -q .
 }
 

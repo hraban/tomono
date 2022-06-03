@@ -54,6 +54,13 @@ $ export MONOREPO_NAME=my_directory
 $ ...
 ```
 
+If the default branch name is different than `master`, set another envvar:
+
+```sh
+$ export MONOREPO_BRANCH=my_branch
+$ ...
+```
+
 ### Tags and namespacing
 
 Note that all tags are namespaced by default: e.g. if your remote `foo` has tags
