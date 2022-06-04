@@ -91,7 +91,11 @@ function create-mono {
 	mkdir -p .git/refs/namespaced-tags
 
 	read_repositories | while read -r repo name folder; do
-		if [[ -z "$name" ]]; then
+		# Ignore commented-out lines
+        if [[ "$repo" == "#"* ]]; then
+            continue
+        fi
+        if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
 		elif [[ "$name" = */* ]]; then
