@@ -106,6 +106,10 @@ function create-mono {
 		if [[ -z "$folder" ]]; then
 			folder="$name"
 		fi
+		# Cannot have '.' as a remote name
+		if [[ "$name" == "." ]]; then
+			name=toplevel
+		fi
 
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
@@ -133,7 +137,11 @@ function create-mono {
 				git commit -q --allow-empty -m "Root commit for $branch branch"
 			fi
 			git merge -q --no-commit -s ours "$name/$branch" --allow-unrelated-histories
-			git read-tree --prefix="$folder/" "$name/$branch"
+            GRT_OPTS=()
+            if [[ "$folder" != "." ]]; then
+                GRT_OPTS=(--prefix="$folder/")
+            fi
+			git read-tree "${GRT_OPTS[@]}" "$name/$branch"
 			git commit -q --no-verify --allow-empty -m "Merging $name to $branch"
 		done
 	done

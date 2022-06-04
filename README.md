@@ -61,6 +61,16 @@ $ export MONOREPO_BRANCH=my_branch
 $ ...
 ```
 
+If you want one of the imported repositories to live at the root of the
+monorepo, use a dot as the folder name:
+
+```
+git@github.com:mycompany/main.git main .
+```
+
+**Warning**: any toplevel dir has to be the first on the list, otherwise
+`git read-tree` will remove previous dirs when reading in the toplevel one.
+
 ### Tags and namespacing
 
 Note that all tags are namespaced by default: e.g. if your remote `foo` has tags
