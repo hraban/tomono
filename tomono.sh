@@ -90,8 +90,7 @@ function create-mono {
 	# This directory will contain all final tag refs (namespaced)
 	mkdir -p .git/refs/namespaced-tags
 
-	read_repositories | while read repo name folder; do
-
+	read_repositories | while read -r repo name folder; do
 		if [[ -z "$name" ]]; then
 			echo "pass REPOSITORY NAME pairs on stdin" >&2
 			return 1
@@ -100,13 +99,13 @@ function create-mono {
 			return 1
 		fi
 
-                if [[ -z "$folder" ]]; then
+		if [[ -z "$folder" ]]; then
 			folder="$name"
-                fi
+		fi
 
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
-		echo "Fetching $name.." >&2 
+		echo "Fetching $name.." >&2
 		git fetch -q "$name"
 
 		# Now we've got all tags in .git/refs/tags: put them away for a sec
@@ -116,7 +115,7 @@ function create-mono {
 
 		# Merge every branch from the sub repo into the mono repo, into a
 		# branch of the same name (create one if it doesn't exist).
-		remote-branches "$name" | while read branch; do
+		remote-branches "$name" | while read -r branch; do
 			if git rev-parse -q --verify "$branch"; then
 				# Branch already exists, just check it out (and clean up the working dir)
 				git checkout -q "$branch"
