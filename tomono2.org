@@ -144,6 +144,115 @@ TODO: Explain why you'd wanna do this. Trade-offs, etc.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
 
+* Usage
+
+Run the =tomono= script with your config on stdin, in the following format:
+
+#+begin_example
+git@github.com:mycompany/my-repo-abc.git abc
+git@github.com:mycompany/my-repo-def.git def
+#+end_example
+
+Concrete example:
+
+#+begin_src sh :eval never :exports code
+$ cat my-repos.txt
+git@github.com:mycompany/my-repo-abc.git abc
+git@github.com:mycompany/my-repo-def.git def
+$ /path/to/tomono < my-repos.txt
+
+... noise noise noise
+
+$ cd core # your monorepo is here now
+#+end_src
+
+That should be all 🙂.
+
+* Example
+
+Run these commands to set up a fresh directory with git monorepos that you can later merge:
+
+#+begin_src sh :exports code :eval never-export :results none
+d="$(mktemp -d)"
+echo "Setting up fresh multi-repos in $d"
+cd "$d"
+
+mkdir foo
+( cd foo
+git init
+echo "This is foo" > i-am-foo.txt
+git add -A
+git commit -m "foo’s master"
+git checkout -b branch-a
+echo "I am a new foo feature" > feature-a.txt
+git add -A
+git commit -m "foo’s feature branch A"
+)
+
+mkdir bar
+(cd bar
+git init
+echo "This is bar" > i-am-bar.txt
+git add -A
+git commit -m "bar’s master"
+git checkout -b branch-a
+echo "I am bar’s side of feature A" > feature-a.txt
+git add -A
+git commit -m "bar’s feature branch A"
+git branch branch-b master
+git checkout branch-b
+echo "I am an entirely new feature of bar: B" > feature-b.txt
+git add -A
+git commit -m "bar’s feature branch B"
+)
+#+end_src
+
+You now have two directories:
+
+- =foo= (branches: =master=, =branch-a=)
+- =bar= (branches: =master=, =branch-a=, =branch-b=)
+
+Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, from that same directory:
+
+#+begin_src sh :exports code :eval never-export :results none
+tomono <<EOF
+$PWD/foo foo
+$PWD/bar bar
+EOF
+#+end_src
+
+This will create a new directory, =core=, where you can find a git tree which looks somewhat like this:
+
+#+begin_example
+,*   0803699 Merge bar/master (HEAD -> master)
+|\
+,* \   6745370 Merge foo/master
+|\ \
+,* | | 9f1d472 root commit for monorepo branch master
+ / /
+| | *   c943466 Merge bar/branch-a (branch-a)
+| | |\
+| | | * 798a6ca bar’s feature branch A (bar/branch-a)
+| | |/
+| |/|
+| | *   5ad4187 Merge foo/branch-a
+| | |\
+| | | * b783ebb foo’s feature branch A (foo/branch-a)
+| |_|/
+|/| |
+,* | | 66d94bb foo’s master (foo/master)
+ / /
+| * 74077da root commit for monorepo branch branch-a
+| *   d8bc902 Merge bar/branch-b (branch-b)
+| |\
+| | * ab40020 bar’s feature branch B (bar/branch-b)
+| |/
+|/|
+,* | 4a9a874 bar’s master (bar/master)
+ /
+,* 2c48815 root commit for monorepo branch branch-b
+#+end_example
+
 * Implementation
 
 The outer program structure is a flat bash script which loops over every repo supplied over stdin.
@@ -312,72 +421,6 @@ every command before it gets executed.
 #+BEGIN_SRC sh
 set -euo pipefail ${DEBUGSH+-x}
 #+END_SRC
-
-* Example
-
-Run these commands to set up a fresh directory with git monorepos that you can later merge:
-
-#+begin_src sh :exports code :eval never-export :results verbatim
-d="$(mktemp -d)"
-echo "Setting up fresh multi-repos in $d"
-cd "$d"
-
-mkdir foo
-( cd foo
-git init
-echo "This is foo" > i-am-foo.txt
-git add -A
-git commit -m "foo’s master"
-git checkout -b branch-a
-echo "I am a new foo feature" > feature-a.txt
-git add -A
-git commit -m "foo’s feature branch A"
-)
-
-mkdir bar
-(cd bar
-git init
-echo "This is bar" > i-am-bar.txt
-git add -A
-git commit -m "bar’s master"
-git checkout -b branch-a
-echo "I am bar’s side of feature A" > feature-a.txt
-git add -A
-git commit -m "bar’s feature branch A"
-git branch branch-b master
-git checkout branch-b
-echo "I am an entirely new feature of bar: B" > feature-b.txt
-git add -A
-git commit -m "bar’s feature branch B"
-)
-#+end_src
-
-#+RESULTS:
-#+begin_example
-Setting up fresh multi-repos in /var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK
-Initialized empty Git repository in /private/var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK/foo/.git/
-[master (root-commit) 9519ab5] foo’s master
- 1 file changed, 1 insertion(+)
- create mode 100644 i-am-foo.txt
-[branch-a 9bdf068] foo’s feature branch A
- 1 file changed, 1 insertion(+)
- create mode 100644 feature-a.txt
-Initialized empty Git repository in /private/var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK/bar/.git/
-[master (root-commit) 20df7ef] bar’s master
- 1 file changed, 1 insertion(+)
- create mode 100644 i-am-bar.txt
-[branch-a 24514ef] bar’s feature branch A
- 1 file changed, 1 insertion(+)
- create mode 100644 feature-a.txt
-[branch-b b91265d] bar’s feature branch B
- 1 file changed, 1 insertion(+)
- create mode 100644 feature-b.txt
-#+end_example
-
-You now have two directories:
-
-- =foo= (branches: =master=, =branch-a=)
-- =bar= (branches: =master=, =branch-a=, =branch-b=)
 
 * Copyright and license
 
