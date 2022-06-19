@@ -1,5 +1,4 @@
-tomono
+# org export noise
 *.html
 
-
-LICENSE
+# don't ignore the tangled files though

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# [[file:Readme.org::top-level][top-level]]
+set -euo pipefail ${DEBUGSH+-x}
+
+: "${MONOREPO_NAME:=core}"
+if [[ -d "$MONOREPO_NAME" ]]; then
+    >&2 echo "monorepo directory $MONOREPO_NAME already exists"
+    exit 1
+fi
+
+mkdir "$MONOREPO_NAME"
+cd "$MONOREPO_NAME"
+git init
+
+while read repourl reponame; do
+    git remote add "$reponame" "$repourl"
+    git fetch --no-tags "$reponame"
+    git ls-remote --heads --refs "$reponame" | sed 's_.*refs/heads/__' | while read branch ; do
+        if git checkout --orphan "$branch"; then
+            git rm -rf . || :
+            git commit --allow-empty -m "root commit for monorepo branch $branch"
+        else
+            git checkout "$branch"
+        fi
+        mkdir -p "$reponame"
+        git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
+        git --work-tree "./$reponame/" checkout "$reponame/$branch" -- .
+        git add -A
+        git commit -m "Merge $reponame/$branch"
+    done
+done
+
+# Copyright © 2020, 2022 Hraban Luyat
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, version 3 of the License.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# 
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# top-level ends here
