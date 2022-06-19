@@ -4,111 +4,111 @@
 #+EMAIL:        hraban@0brg.net
 #+PROPERTY:     header-args       :noweb no-export
 
-#+BEGIN_SRC txt :references lala :exports none
+#+BEGIN_COMMENT
 for later:
-,#+PROPERTY:     header-args:shell :comments link
-#+END_SRC
+#+PROPERTY:     header-args:shell :comments link
+#+END_COMMENT
 
 #+NAME: configure-org-mode-for-this-file
-#+BEGIN_SRC emacs-lisp :exports results :results none
-  ;; This is configuration for org mode itself, not tomono src code. Don't export this.
+#+BEGIN_SRC emacs-lisp :exports none :results none
+;; This is configuration for org mode itself, not tomono src code. Don't export this.
 
-  ;; TODO: Don't define as global functions? How do you do this in EL?
+;; TODO: Don't define as global functions? How do you do this in EL?
 
-  (defun org-info-name (info)
-    (nth 4 info))
+(defun org-info-name (info)
+  (nth 4 info))
 
-  (defun insert-ln (&rest args)
-    (apply #'insert args)
-    (newline))
+(defun insert-ln (&rest args)
+  (apply #'insert args)
+  (newline))
 
-  (defun should-reference (info)
-    "Determine if this info block is a referencing code block"
-    (not (memq (alist-get :noweb (nth 2 info))
-               '(nil "no"))))
+(defun should-reference (info)
+  "Determine if this info block is a referencing code block"
+  (not (memq (alist-get :noweb (nth 2 info))
+             '(nil "no"))))
 
-  (defun re-findall (re str &optional offset)
-    "Find all matches of a regex in the given string"
-    (let ((start (string-match re str offset))
-          (end (match-end 0)))
-      (when (numberp start)
-        (cons (substring str start end) (re-findall re str end)))))
+(defun re-findall (re str &optional offset)
+  "Find all matches of a regex in the given string"
+  (let ((start (string-match re str offset))
+        (end (match-end 0)))
+    (when (numberp start)
+      (cons (substring str start end) (re-findall re str end)))))
 
-  ;; Match groups are the perfect tool to achieve this but EL's regex is
-  ;; inferior and it's not worth the hassle. Blag it manually.
+;; Match groups are the perfect tool to achieve this but EL's regex is
+;; inferior and it's not worth the hassle. Blag it manually.
 
-  (defun strip-delimiters (s prefix suffix)
-    "Strip a prefix and suffix delimiter, e.g.:
-  (strip-delimiters \"<a>\" \"<\" \">\")
-  => \"a\"
+(defun strip-delimiters (s prefix suffix)
+  "Strip a prefix and suffix delimiter, e.g.:
+(strip-delimiters \"<a>\" \"<\" \">\")
+=> \"a\"
 
-  Note this function trusts the input string has those delimiters"
-    (substring s (length prefix) (- (length suffix))))
+Note this function trusts the input string has those delimiters"
+  (substring s (length prefix) (- (length suffix))))
 
-  (defun strip-noweb-delimiters (s)
-    "Strip the org noweb link delimiters, usually << and >>"
-    (strip-delimiters s org-babel-noweb-wrap-start org-babel-noweb-wrap-end))
+(defun strip-noweb-delimiters (s)
+  "Strip the org noweb link delimiters, usually << and >>"
+  (strip-delimiters s org-babel-noweb-wrap-start org-babel-noweb-wrap-end))
 
-  (defun extract-refs (body)
-    (mapcar #'strip-noweb-delimiters (re-findall (org-babel-noweb-wrap) body)))
+(defun extract-refs (body)
+  (mapcar #'strip-noweb-delimiters (re-findall (org-babel-noweb-wrap) body)))
 
-  (defun add-to-hash-list (k elem hash)
-    "Assuming the hash values are lists, add this element to k's list"
-    (puthash k (cons elem (gethash k hash)) hash))
+(defun add-to-hash-list (k elem hash)
+  "Assuming the hash values are lists, add this element to k's list"
+  (puthash k (cons elem (gethash k hash)) hash))
 
-  (defun register-refs (name refs)
-    (puthash name refs forward-refs)
-    ;; Add a backreference to every ref
-    (mapc (lambda (ref)
-            (add-to-hash-list ref name back-refs))
-          refs))
+(defun register-refs (name refs)
+  (puthash name refs forward-refs)
+  ;; Add a backreference to every ref
+  (mapc (lambda (ref)
+          (add-to-hash-list ref name back-refs))
+        refs))
 
-  (defun parse-blocks ()
-    (let ((forward-refs (make-hash-table :test 'equal))
-          (back-refs (make-hash-table :test 'equal)))
-      (org-babel-map-src-blocks nil
-        ;; Probably not v efficient, but should be memoized anyway?
-        (let* ((info (org-babel-get-src-block-info full-block))
-               (name (org-info-name info)))
-          (when (and name (should-reference info))
-            (register-refs name (extract-refs body)))))
-      (list forward-refs back-refs)))
+(defun parse-blocks ()
+  (let ((forward-refs (make-hash-table :test 'equal))
+        (back-refs (make-hash-table :test 'equal)))
+    (org-babel-map-src-blocks nil
+      ;; Probably not v efficient, but should be memoized anyway?
+      (let* ((info (org-babel-get-src-block-info full-block))
+             (name (org-info-name info)))
+        (when (and name (should-reference info))
+          (register-refs name (extract-refs body)))))
+    (list forward-refs back-refs)))
 
-  (defun insert-reference (ref)
-    (insert-ln "- [[" ref "][" ref "]]"))
+(defun insert-reference (ref)
+  (insert-ln "- [[" ref "][" ref "]]"))
 
-  (defun insert-references-block (info title refs)
-    (when refs
-      (message "Formatting references block %S: %S" title refs)
-      (insert-ln title)
-      (mapc #'insert-reference refs)))
+(defun insert-references-block (info title refs)
+  (when refs
+    (message "Formatting references block %S: %S" title refs)
+    (insert-ln title)
+    (mapc #'insert-reference refs)))
 
-  (defun insert-references (info forward back)
-    (when (or forward back)
-      (newline)
-      (insert-ln ":REFERENCES:")
-      (insert-references-block info "References:" forward)
-      (insert-references-block info "Used by:" back)
-      (insert-ln ":END:")))
+(defun insert-references (info forward back)
+  (when (or forward back)
+    (newline)
+    (insert-ln ":REFERENCES:")
+    (insert-references-block info "References:" forward)
+    (insert-references-block info "Used by:" back)
+    (insert-ln ":END:")))
 
-  (defun get-references (name)
-    (list (gethash name forward-refs) (gethash name back-refs)))
+(defun get-references (name)
+  (list (gethash name forward-refs) (gethash name back-refs)))
 
-  (defun fix-references (backend)
-    "Append a references section to every noweb codeblock"
-    (destructuring-bind (forward-refs back-refs) (parse-blocks)
-      (message "parsed forward: %S" forward-refs)
-      (message "parsed backward: %S" back-refs)
-      (org-babel-map-src-blocks nil
-        (let ((info (org-babel-get-src-block-info full-block)))
-          (message "NOCOMMIT -- should reference %S ? (alist-get :references %S) : %S" (org-info-name info) (nth 2 info) (alist-get :references (nth 2 info)))
-          (when (should-reference info)
-            (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
-              (message "fix-references: Block %S at point %S beg-block %S end-block %S beg-body %S end-body %S, line: %s" name (point) beg-block end-block beg-body end-body (thing-at-point 'line t))
-              (goto-char end-block)
-              (apply #'insert-references info (get-references name))))))))
+(defun fix-references (backend)
+  "Append a references section to every noweb codeblock"
+  (destructuring-bind (forward-refs back-refs) (parse-blocks)
+    (message "parsed forward: %S" forward-refs)
+    (message "parsed backward: %S" back-refs)
+    (org-babel-map-src-blocks nil
+      (let ((info (org-babel-get-src-block-info full-block)))
+        (message "NOCOMMIT -- should reference %S ? (alist-get :references %S) : %S" (org-info-name info) (nth 2 info) (alist-get :references (nth 2 info)))
+        (when (should-reference info)
+          (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
+            (message "fix-references: Block %S at point %S beg-block %S end-block %S beg-body %S end-body %S, line: %s" name (point) beg-block end-block beg-body end-body (thing-at-point 'line t))
+            (goto-char end-block)
+            (apply #'insert-references info (get-references name))))))))
 
-  (add-hook 'org-export-before-parsing-hook 'fix-references nil t)
+(add-hook 'org-export-before-parsing-hook 'fix-references nil t)
 #+END_SRC
 
 #+NAME: debug-org
@@ -137,7 +137,7 @@ for later:
   ;;       (princ "\n## info\n")
   ;;       (pp info))))
 #+END_SRC
- 
+
 * Motivation
 
 TODO: Explain why you'd wanna do this. Trade-offs, etc.
@@ -165,7 +165,10 @@ done
 
 ** Per repository
 
-Every repository is fetched and fully handled individually, and sequentially. First, fetch all the data related to this repository, then immediately check out and initialise every single branch which belongs to that repository.
+Every repository is fetched and fully handled individually, and sequentially:
+
+1. fetch all the data related to this repository,
+2. immediately check out and initialise every single branch which belongs to that repository.
 
 #+CAPTION: handle-remote
 #+NAME: handle-remote
@@ -177,21 +180,89 @@ Every repository is fetched and fully handled individually, and sequentially. Fi
   done
 #+END_SRC
 
-** Per branch
+** Per branch (this is where the magic happens)
 
-In the context of a single repository check-out, every branch is checked out into a subdir for that repository, and merged into the monorepo.
+In the context of /a single repository check-out/, every branch is independently checked out into a subdir for that repository, and merged into the monorepo.
 
-This is work in progress.
+This is the money shot.
 
 #+CAPTION: handle-branch
 #+NAME: handle-branch
 #+BEGIN_SRC sh
-git checkout --orphan "$branch" && \
-    git commit --allow-empty -m "root commit for monorepo branch $branch" || true
-git rm -rf .
-git checkout --subtree=...
-git merge ...
+<<ensure-on-target-branch-in-monorepo>>
+mkdir -p "$reponame"
+git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
+git --work-tree "./$reponame/" checkout "$reponame/$branch" -- .
+git add -A
+git commit -m "Merge $reponame/$branch"
 #+END_SRC
+
+*** Ensure we are on the right branch
+
+We are given the variable =$branch= which is the final name of the branch we want to operate on. It is the same as the name of the branch in each individual target repo.
+
+In this snippet, we ensure that we are ready to merge fresh code from a subrepo into this branch: either we checkout an existing branch in the monorepo by this name, or we create a fresh one.
+
+#+CAPTION: ensure-on-target-branch-in-monorepo
+#+NAME: ensure-on-target-branch-in-monorepo
+#+BEGIN_SRC sh
+if git checkout --orphan "$branch"; then
+    git rm -rf . || :
+    git commit --allow-empty -m "root commit for monorepo branch $branch"
+else
+    git checkout "$branch"
+fi
+#+END_SRC
+
+Technically; we do it the other way around :) First I try to create a fresh branch, and only if that fails, I switch to the existing one. This way I'm sure that a branch exists, so when I =git checkout "$branch"= , I don't clash with a filename, instead.
+
+Neat side effect of =git checkout --orphan=: if the branch already exists, but has no commits at all on it, the operation succeeds as if the branch were freshly created. This helps us with the very first commit on =master=, which will have been automatically created as part of =git init=:
+
+#+begin_comment
+I'm sure there is a cooler way to do the below, something involving =:results inline :exports both=, but I find my current options lacking. The HTML output is unreadable.
+
+E.g. the HTML export of this:
+
+#+begin_src sh :tangle no :results inline :exports both
+date
+#+end_src
+
+results in two completely separate blocks. This makes a interactive shell session with multiple individual commands hard to follow. Would be nice to have some sort of plugin for this.
+#+end_comment
+
+#+begin_src sh :tangle no :exports code
+$ cd "$(mktemp -d)"
+
+$ git init
+...
+
+$ git status
+On branch master
+...
+
+$ git checkout --orphan master
+Switched to a new branch 'master'
+$ echo $?
+0
+
+$ echo foo > bar ; git add bar ; git commit -m first
+...
+
+$ git checkout --orphan master
+fatal: A branch named 'master' already exists.
+$ echo $?
+128
+#+end_src
+
+As you can see, doing =git checkout --orphan= on master on a fresh repo is no problem. Otherwise we would have had to special case it.
+
+I'm sure this would still fail on some cases, e.g. branch names starting with a =-=. Ideally, I'd like a plumbing command to really just =git checkout-branch -- <branch-name>= no matter what. I'm sure the new =git switch= can help, but, quoth the man page:
+
+#+begin_src :tangle no
+THIS COMMAND IS EXPERIMENTAL. THE BEHAVIOR MAY CHANGE.
+#+end_src
+
+Ah well. Don't start your branch names with =-=, I guess?
 
 ** Set up the monorepo directory
 
@@ -213,33 +284,19 @@ git init
 
 The reason we don't just do this:
 #+BEGIN_SRC sh :tangle no :results inline
-echo HELLO THERE
-date
 #+END_SRC
-
-#+RESULTS:
-| HELLO | THERE |     |      |          |     |
-| Tue   |    24 | Mar | 2020 | 18:33:58 | GMT |
-
-is because that would be crazy.
 
 ** List individual branches
 
-I just want a single branch name per line on stdout, for a single
-specific remote. Additionally, I want to keep any text manipulation to
-a minimum, so as not to expose myself to any weird unicode or
-space/tab/special character risk. It turns out that the most reliable
-way to do this is not a plumbing command like =git list-raw-branches
-my-remote=, but jumping down into the git filesystem database and
-reading the raw file names directly.
-
-Execute it all in a subshell to keep the effect of =cd= localised to this block of code.
+I want a single branch name per line on stdout, for a single specific remote:
 
 #+CAPTION: list-branches
 #+NAME: list-branches
 #+BEGIN_SRC sh
-( cd ".git/refs/remotes/$reponame" && find . -type f -mindepth 1 | sed -e s/..// )
+git ls-remote --heads --refs "$reponame" | sed 's_.*refs/heads/__'
 #+END_SRC
+
+Inspired by GitHub user @TacoVox in [[https://github.com/hraban/tomono/pull/39][PR 39]].
 
 ** Error flags, warnings, debug
 
@@ -256,6 +313,71 @@ every command before it gets executed.
 set -euo pipefail ${DEBUGSH+-x}
 #+END_SRC
 
+* Example
+
+Run these commands to set up a fresh directory with git monorepos that you can later merge:
+
+#+begin_src sh :exports code :eval never-export :results verbatim
+d="$(mktemp -d)"
+echo "Setting up fresh multi-repos in $d"
+cd "$d"
+
+mkdir foo
+( cd foo
+git init
+echo "This is foo" > i-am-foo.txt
+git add -A
+git commit -m "foo’s master"
+git checkout -b branch-a
+echo "I am a new foo feature" > feature-a.txt
+git add -A
+git commit -m "foo’s feature branch A"
+)
+
+mkdir bar
+(cd bar
+git init
+echo "This is bar" > i-am-bar.txt
+git add -A
+git commit -m "bar’s master"
+git checkout -b branch-a
+echo "I am bar’s side of feature A" > feature-a.txt
+git add -A
+git commit -m "bar’s feature branch A"
+git branch branch-b master
+git checkout branch-b
+echo "I am an entirely new feature of bar: B" > feature-b.txt
+git add -A
+git commit -m "bar’s feature branch B"
+)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Setting up fresh multi-repos in /var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK
+Initialized empty Git repository in /private/var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK/foo/.git/
+[master (root-commit) 9519ab5] foo’s master
+ 1 file changed, 1 insertion(+)
+ create mode 100644 i-am-foo.txt
+[branch-a 9bdf068] foo’s feature branch A
+ 1 file changed, 1 insertion(+)
+ create mode 100644 feature-a.txt
+Initialized empty Git repository in /private/var/folders/2g/49qlq6q17cbcn1225j4yk2yw0000gn/T/tmp.XSIgVBKxBK/bar/.git/
+[master (root-commit) 20df7ef] bar’s master
+ 1 file changed, 1 insertion(+)
+ create mode 100644 i-am-bar.txt
+[branch-a 24514ef] bar’s feature branch A
+ 1 file changed, 1 insertion(+)
+ create mode 100644 feature-a.txt
+[branch-b b91265d] bar’s feature branch B
+ 1 file changed, 1 insertion(+)
+ create mode 100644 feature-b.txt
+#+end_example
+
+You now have two directories:
+
+- =foo= (branches: =master=, =branch-a=)
+- =bar= (branches: =master=, =branch-a=, =branch-b=)
 
 * Copyright and license
 
