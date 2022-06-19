@@ -97,45 +97,14 @@ Note this function trusts the input string has those delimiters"
 (defun fix-references (backend)
   "Append a references section to every noweb codeblock"
   (destructuring-bind (forward-refs back-refs) (parse-blocks)
-    (message "parsed forward: %S" forward-refs)
-    (message "parsed backward: %S" back-refs)
     (org-babel-map-src-blocks nil
       (let ((info (org-babel-get-src-block-info full-block)))
-        (message "NOCOMMIT -- should reference %S ? (alist-get :references %S) : %S" (org-info-name info) (nth 2 info) (alist-get :references (nth 2 info)))
         (when (should-reference info)
           (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
-            (message "fix-references: Block %S at point %S beg-block %S end-block %S beg-body %S end-body %S, line: %s" name (point) beg-block end-block beg-body end-body (thing-at-point 'line t))
             (goto-char end-block)
             (apply #'insert-references info (get-references name))))))))
 
 (add-hook 'org-export-before-parsing-hook 'fix-references nil t)
-#+END_SRC
-
-#+NAME: debug-org
-#+BEGIN_SRC emacs-lisp :exports none :results output
-  ;;Debugging org mode. Should also not export
-
-  (defun my-tracing-func (orig-fun &rest args)
-    "Debug advice for a function"
-    (message "Calling with %S" args)
-    (let ((res (apply orig-fun args)))
-      (message "returned %S" res)
-      res))
-
-  ;(advice-add #'org-babel-exp-code :around #'my-tracing-func)
-  ;(advice-remove #'org-babel-exp-code #'my-tracing-func)
-
-  ;(advice-function-mapc (lambda (&rest args) (message "%S" args)) #'foo)
-  ;(foo 123)
-
-  ;; (org-babel-map-src-blocks nil
-  ;;   (let ((info (org-babel-get-src-block-info full-block)))
-  ;;     (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
-  ;;       (princ (format "\n===%s===\n" name))
-  ;;       (princ "\n## block\n")
-  ;;       (pp full-block)
-  ;;       (princ "\n## info\n")
-  ;;       (pp info))))
 #+END_SRC
 
 * Motivation
