@@ -107,8 +107,6 @@ Note this function trusts the input string has those delimiters"
 (add-hook 'org-export-before-parsing-hook 'fix-references nil t)
 #+END_SRC
 
-* What Is This?
-
 This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example]] for exactly how this works.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
@@ -136,6 +134,20 @@ $ cd core # your monorepo is here now
 #+end_src
 
 That should be all 🙂.
+
+** Custom name for monorepo directory
+
+Don’t like =core=? Set a different name through an envvar before running the script:
+
+#+begin_src sh
+export MONOREPO_NAME=the-big-repo
+#+end_src
+
+** Custom “master” / “main” branch name
+
+No need to do anything. This script does not handle any master / main branch in any special way. It just merges whatever branches exist. Don’t have a “master” branch? None will be created.
+
+Make sure your own computer has the right branch set up in its =init.defaultBranch= setting.
 
 * Example
 
