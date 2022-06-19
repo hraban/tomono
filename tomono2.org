@@ -107,9 +107,9 @@ Note this function trusts the input string has those delimiters"
 (add-hook 'org-export-before-parsing-hook 'fix-references nil t)
 #+END_SRC
 
-* Motivation
+* What Is This?
 
-TODO: Explain why you'd wanna do this. Trade-offs, etc.
+This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example]] for exactly how this works.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
 
