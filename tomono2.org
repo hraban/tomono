@@ -150,7 +150,7 @@ The outer program structure is a flat bash script which loops over every repo su
 
 #+CAPTION: top-level
 #+NAME: top-level
-#+BEGIN_SRC shell :tangle tomono :comments link :shebang "#!/usr/bin/env bash" :references ye
+#+BEGIN_SRC shell :tangle tomono :comments link :shebang "#!/usr/bin/env bash" :references yes
 
 <<set-flags>>
 
@@ -381,17 +381,26 @@ You now have two directories:
 
 * Copyright and license
 
-This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start. The license and copyright attribution of this entire document can now be set:
+This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start.
+
+The license and copyright attribution of this entire document can now be set:
 
 #+CAPTION: copyright
 #+NAME: copyright
-#+BEGIN_SRC txt
-Copyright © 2020 Hraban Luyat <hraban@0brg.net>
-Licensed under the AGPLv3. Details in the License chapter.
+#+BEGIN_SRC fundamental
+Copyright © 2020, 2022 Hraban Luyat
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #+END_SRC
 
-** GNU AGPLv3 Full License
-
-#+BEGIN_SRC txt :tangle LICENSE :references yeye
-NOCOMMIT
-#+END_SRC
+I did not look at the original implementation at all while developing this.
