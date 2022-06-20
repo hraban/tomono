@@ -4,109 +4,6 @@
 #+EMAIL:        hraban@0brg.net
 #+PROPERTY:     header-args       :noweb no-export
 
-#+BEGIN_COMMENT
-for later:
-#+PROPERTY:     header-args:shell :comments link
-#+END_COMMENT
-
-#+NAME: configure-org-mode-for-this-file
-#+BEGIN_SRC emacs-lisp :exports none :results none
-;; This is configuration for org mode itself, not tomono src code. Don't export this.
-
-;; TODO: Don't define as global functions? How do you do this in EL?
-
-(defun org-info-name (info)
-  (nth 4 info))
-
-(defun insert-ln (&rest args)
-  (apply #'insert args)
-  (newline))
-
-(defun should-reference (info)
-  "Determine if this info block is a referencing code block"
-  (not (memq (alist-get :noweb (nth 2 info))
-             '(nil "no"))))
-
-(defun re-findall (re str &optional offset)
-  "Find all matches of a regex in the given string"
-  (let ((start (string-match re str offset))
-        (end (match-end 0)))
-    (when (numberp start)
-      (cons (substring str start end) (re-findall re str end)))))
-
-;; Match groups are the perfect tool to achieve this but EL's regex is
-;; inferior and it's not worth the hassle. Blag it manually.
-
-(defun strip-delimiters (s prefix suffix)
-  "Strip a prefix and suffix delimiter, e.g.:
-(strip-delimiters \"<a>\" \"<\" \">\")
-=> \"a\"
-
-Note this function trusts the input string has those delimiters"
-  (substring s (length prefix) (- (length suffix))))
-
-(defun strip-noweb-delimiters (s)
-  "Strip the org noweb link delimiters, usually << and >>"
-  (strip-delimiters s org-babel-noweb-wrap-start org-babel-noweb-wrap-end))
-
-(defun extract-refs (body)
-  (mapcar #'strip-noweb-delimiters (re-findall (org-babel-noweb-wrap) body)))
-
-(defun add-to-hash-list (k elem hash)
-  "Assuming the hash values are lists, add this element to k's list"
-  (puthash k (cons elem (gethash k hash)) hash))
-
-(defun register-refs (name refs)
-  (puthash name refs forward-refs)
-  ;; Add a backreference to every ref
-  (mapc (lambda (ref)
-          (add-to-hash-list ref name back-refs))
-        refs))
-
-(defun parse-blocks ()
-  (let ((forward-refs (make-hash-table :test 'equal))
-        (back-refs (make-hash-table :test 'equal)))
-    (org-babel-map-src-blocks nil
-      ;; Probably not v efficient, but should be memoized anyway?
-      (let* ((info (org-babel-get-src-block-info full-block))
-             (name (org-info-name info)))
-        (when (and name (should-reference info))
-          (register-refs name (extract-refs body)))))
-    (list forward-refs back-refs)))
-
-(defun insert-reference (ref)
-  (insert-ln "- [[" ref "][" ref "]]"))
-
-(defun insert-references-block (info title refs)
-  (when refs
-    (message "Formatting references block %S: %S" title refs)
-    (insert-ln title)
-    (mapc #'insert-reference refs)))
-
-(defun insert-references (info forward back)
-  (when (or forward back)
-    (newline)
-    (insert-ln ":REFERENCES:")
-    (insert-references-block info "References:" forward)
-    (insert-references-block info "Used by:" back)
-    (insert-ln ":END:")))
-
-(defun get-references (name)
-  (list (gethash name forward-refs) (gethash name back-refs)))
-
-(defun fix-references (backend)
-  "Append a references section to every noweb codeblock"
-  (destructuring-bind (forward-refs back-refs) (parse-blocks)
-    (org-babel-map-src-blocks nil
-      (let ((info (org-babel-get-src-block-info full-block)))
-        (when (should-reference info)
-          (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
-            (goto-char end-block)
-            (apply #'insert-references info (get-references name))))))))
-
-(add-hook 'org-export-before-parsing-hook 'fix-references nil t)
-#+END_SRC
-
 This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example]] for exactly how this works.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
@@ -424,3 +321,109 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #+END_SRC
 
 I did not look at the original implementation at all while developing this.
+
+* Building the code                                                :noexport:
+Here is code to build the exported HTML
+
+
+#+BEGIN_COMMENT
+Also, TODO: #+PROPERTY:     header-args:shell :comments link
+#+END_COMMENT
+
+#+NAME: configure-org-mode-for-this-file
+#+BEGIN_SRC emacs-lisp :exports none :results none
+;; This is configuration for org mode itself, not tomono src code. Don't export this.
+
+;; TODO: Don't define as global functions? How do you do this in EL?
+
+(defun org-info-name (info)
+  (nth 4 info))
+
+(defun insert-ln (&rest args)
+  (apply #'insert args)
+  (newline))
+
+(defun should-reference (info)
+  "Determine if this info block is a referencing code block"
+  (not (memq (alist-get :noweb (nth 2 info))
+             '(nil "no"))))
+
+(defun re-findall (re str &optional offset)
+  "Find all matches of a regex in the given string"
+  (let ((start (string-match re str offset))
+        (end (match-end 0)))
+    (when (numberp start)
+      (cons (substring str start end) (re-findall re str end)))))
+
+;; Match groups are the perfect tool to achieve this but EL's regex is
+;; inferior and it's not worth the hassle. Blag it manually.
+
+(defun strip-delimiters (s prefix suffix)
+  "Strip a prefix and suffix delimiter, e.g.:
+(strip-delimiters \"<a>\" \"<\" \">\")
+=> \"a\"
+
+Note this function trusts the input string has those delimiters"
+  (substring s (length prefix) (- (length suffix))))
+
+(defun strip-noweb-delimiters (s)
+  "Strip the org noweb link delimiters, usually << and >>"
+  (strip-delimiters s org-babel-noweb-wrap-start org-babel-noweb-wrap-end))
+
+(defun extract-refs (body)
+  (mapcar #'strip-noweb-delimiters (re-findall (org-babel-noweb-wrap) body)))
+
+(defun add-to-hash-list (k elem hash)
+  "Assuming the hash values are lists, add this element to k's list"
+  (puthash k (cons elem (gethash k hash)) hash))
+
+(defun register-refs (name refs)
+  (puthash name refs forward-refs)
+  ;; Add a backreference to every ref
+  (mapc (lambda (ref)
+          (add-to-hash-list ref name back-refs))
+        refs))
+
+(defun parse-blocks ()
+  (let ((forward-refs (make-hash-table :test 'equal))
+        (back-refs (make-hash-table :test 'equal)))
+    (org-babel-map-src-blocks nil
+      ;; Probably not v efficient, but should be memoized anyway?
+      (let* ((info (org-babel-get-src-block-info full-block))
+             (name (org-info-name info)))
+        (when (and name (should-reference info))
+          (register-refs name (extract-refs body)))))
+    (list forward-refs back-refs)))
+
+(defun insert-reference (ref)
+  (insert-ln "- [[" ref "][" ref "]]"))
+
+(defun insert-references-block (info title refs)
+  (when refs
+    (message "Formatting references block %S: %S" title refs)
+    (insert-ln title)
+    (mapc #'insert-reference refs)))
+
+(defun insert-references (info forward back)
+  (when (or forward back)
+    (newline)
+    (insert-ln ":REFERENCES:")
+    (insert-references-block info "References:" forward)
+    (insert-references-block info "Used by:" back)
+    (insert-ln ":END:")))
+
+(defun get-references (name)
+  (list (gethash name forward-refs) (gethash name back-refs)))
+
+(defun fix-references (backend)
+  "Append a references section to every noweb codeblock"
+  (destructuring-bind (forward-refs back-refs) (parse-blocks)
+    (org-babel-map-src-blocks nil
+      (let ((info (org-babel-get-src-block-info full-block)))
+        (when (should-reference info)
+          (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
+            (goto-char end-block)
+            (apply #'insert-references info (get-references name))))))))
+
+(add-hook 'org-export-before-parsing-hook 'fix-references nil t)
+#+END_SRC
