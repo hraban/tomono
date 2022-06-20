@@ -1,4 +1,4 @@
-#+TITLE:        Tomono — Multi- to Monorepo Migration
+#+TITLE:        Multi- to Monorepo Migration
 #+DESCRIPTION:  Migrate your multirepo to a monorepo using a bash script
 #+AUTHOR:       Hraban Luyat
 #+EMAIL:        hraban@0brg.net
@@ -370,10 +370,6 @@ fi
 mkdir "$MONOREPO_NAME"
 cd "$MONOREPO_NAME"
 git init
-#+END_SRC
-
-The reason we don't just do this:
-#+BEGIN_SRC sh :tangle no :results inline
 #+END_SRC
 
 ** List individual branches
