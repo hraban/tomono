@@ -56,32 +56,34 @@ echo "Setting up fresh multi-repos in $d"
 cd "$d"
 
 mkdir foo
-( cd foo
-git init
-echo "This is foo" > i-am-foo.txt
-git add -A
-git commit -m "foo’s master"
-git checkout -b branch-a
-echo "I am a new foo feature" > feature-a.txt
-git add -A
-git commit -m "foo’s feature branch A"
+(
+    cd foo
+    git init
+    echo "This is foo" > i-am-foo.txt
+    git add -A
+    git commit -m "foo’s master"
+    git checkout -b branch-a
+    echo "I am a new foo feature" > feature-a.txt
+    git add -A
+    git commit -m "foo’s feature branch A"
 )
 
 mkdir bar
-(cd bar
-git init
-echo "This is bar" > i-am-bar.txt
-git add -A
-git commit -m "bar’s master"
-git checkout -b branch-a
-echo "I am bar’s side of feature A" > feature-a.txt
-git add -A
-git commit -m "bar’s feature branch A"
-git branch branch-b master
-git checkout branch-b
-echo "I am an entirely new feature of bar: B" > feature-b.txt
-git add -A
-git commit -m "bar’s feature branch B"
+(
+    cd bar
+    git init
+    echo "This is bar" > i-am-bar.txt
+    git add -A
+    git commit -m "bar’s master"
+    git checkout -b branch-a
+    echo "I am bar’s side of feature A" > feature-a.txt
+    git add -A
+    git commit -m "bar’s feature branch A"
+    git branch branch-b master
+    git checkout branch-b
+    echo "I am an entirely new feature of bar: B" > feature-b.txt
+    git add -A
+    git commit -m "bar’s feature branch B"
 )
 #+end_src
 
