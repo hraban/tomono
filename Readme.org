@@ -278,10 +278,43 @@ I want a single branch name per line on stdout, for a single specific remote:
 #+CAPTION: list-branches
 #+NAME: list-branches
 #+BEGIN_SRC sh
-git ls-remote --heads --refs "$reponame" | sed 's_.*refs/heads/__'
+git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)"
 #+END_SRC
 
-Inspired by GitHub user @TacoVox in [[https://github.com/hraban/tomono/pull/39][PR 39]].
+*** Implementations that didn’t make the cut
+
+Solutions I abandoned, due to one short-coming or another:
+
+**** =git branch -r= with grep
+
+The most straight-forward way to list branch names:
+
+#+begin_src sh :eval never :export code :results none
+$ git branch -r
+  bar/branch-a
+  bar/branch-b
+  bar/master
+  foo/branch-a
+  foo/master
+#+end_src
+
+This could be combined with =grep= to filter all branches for a specific remote, and filter out the name. It’s very close, but how do you reliably remove an unknown string?
+
+**** =find .git/refs/hooks=
+
+#+begin_src sh
+( cd ".git/refs/remotes/$reponame" && find . -type f -mindepth 1 | sed -e s/..// )
+#+end_src
+
+Closer, but ugly, and I got reports that it missed some branches (although I was never able to repro)
+
+**** =git ls-remote=
+
+#+begin_src sh
+git ls-remote --heads --refs "$reponame" | sed 's_[^ ]* *refs/heads/__'
+#+end_src
+
+Originally suggested in a [[https://github.com/hraban/tomono/pull/39][PR 39]], I’ve decided not to use this because =git-ls-remote= actively queries the remote to list its branches, rather than inspecting the local state of whatever we just fetched. That feels like a race condition at best, and becomes very annoying if you’re dealing with password protected remotes or otherwise inaccessible repos.
 
 ** Error flags, warnings, debug
 

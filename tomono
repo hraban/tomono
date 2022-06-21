@@ -15,7 +15,7 @@ git init
 while read repourl reponame; do
     git remote add "$reponame" "$repourl"
     git fetch --no-tags "$reponame"
-    git ls-remote --heads --refs "$reponame" | sed 's_.*refs/heads/__' | while read branch ; do
+    git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
         if git checkout --orphan "$branch"; then
             git rm -rf . || :
             git commit --allow-empty -m "root commit for monorepo branch $branch"
