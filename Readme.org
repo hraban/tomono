@@ -58,6 +58,25 @@ Here’s how to pull in an entirely new set of repositories:
 
 Make sure you have your environment set up exactly the same as above. Particularly, you must be in the parent dir of the monorepo.
 
+* Features
+
+- Full history of all your prior repos is intact, no changes to checksums
+- Signatures of old repos stay valid
+- Create the monorepo and keep pulling in changes from your minirepos later
+- Even pull in entire new repos as you go, no need to prepare the whole thing at once
+- Branches with weird names (slashes, etc)
+- All code automatically moved to its own subdirectory
+- No clashes between files with the same name
+
+TODO to bring this cleanroom reimplementation up to date with the old version:
+
+- [X] create fresh monorepo from imported files
+- [X] =MONOREPO_NAME=
+- [X] =--continue=
+- [ ] namespaced tags
+- [ ] folder names (third arg in stdin)
+- [ ] output relevant progress info and hide irrelevant output
+
 * Example
 
 Run these commands to set up a fresh directory with git monorepos that you can later merge:
