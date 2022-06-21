@@ -32,7 +32,12 @@ fi
 	mv tags tags-aux
 )
 
-while read repourl reponame; do
+# Note this is top-level in the script so it’s reading from the script’s stdin
+while read repourl reponame repopath; do
+    if [[ -z "$repopath" ]]; then
+        repopath="$reponame"
+    fi
+
     git remote add "$reponame" "$repourl"
     git fetch --tags --atomic "$reponame"
     (
@@ -48,9 +53,9 @@ while read repourl reponame; do
         else
             git checkout "$branch"
         fi
-        mkdir -p "$reponame"
+        mkdir -p "$repopath"
         git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
-        git --work-tree "./$reponame/" checkout "$reponame/$branch" -- .
+        git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
         git add -A
         git commit -m "Merge $reponame/$branch"
     done

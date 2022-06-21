@@ -13,8 +13,10 @@ Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3c
 Run the =tomono= script with your config on stdin, in the following format:
 
 #+begin_example
-git@github.com:mycompany/my-repo-abc.git abc
-git@github.com:mycompany/my-repo-def.git def
+git@github.com:mycompany/my-repo-abc.git  abc
+git@github.com:mycompany/my-repo-def.git  def
+git@github.com:mycompany/my-lib-uuu.git   uuu  lib/uuu
+git@github.com:mycompany/my-lib-zzz.git   zzz  lib/zzz
 #+end_example
 
 Concrete example:
@@ -74,7 +76,7 @@ TODO to bring this cleanroom reimplementation up to date with the old version:
 - [X] =MONOREPO_NAME=
 - [X] =--continue=
 - [X] namespaced tags
-- [ ] folder names (third arg in stdin)
+- [X] folder names (third arg in stdin)
 - [ ] output relevant progress info and hide irrelevant output
 
 * Example
@@ -211,9 +213,9 @@ I used the branch master in this example, but any branch works the same way.
 Now imagine you want to pull in a third repository into the monorepo:
 
 #+begin_src sh :exports code :eval never-export :results none
-mkdir zim
+mkdir zimlib
 (
-    cd zim
+    cd zimlib
     git init
     echo "This is zim" > i-am-zim.txt
     git add -A
@@ -228,10 +230,12 @@ mkdir zim
 Continue importing it:
 
 #+begin_src sh :exports code :eval never-export :results none
-echo "$PWD/zim zim" | /path/to/tomono --continue
+echo "$PWD/zimlib zim lib/zim" | /path/to/tomono --continue
 #+end_src
 
-And the result is that it gets imported into the existing monorepo, alongside the existing two projects:
+Note that we used a different name for this subrepo, inside the =lib= dir.
+
+The result is that it gets imported into the existing monorepo, alongside the existing two projects:
 
 #+begin_example
 $ cd core
@@ -243,10 +247,11 @@ $ tree
 │   └── i-am-bar.txt
 ├── foo
 │   └── i-am-foo.txt
-└── zim
-    └── i-am-zim.txt
+└── lib
+    └── zim
+        └── i-am-zim.txt
 
-3 directories, 3 files
+4 directories, 3 files
 $ git checkout branch-a
 Switched to branch 'branch-a'
 $ tree
@@ -257,19 +262,20 @@ $ tree
 ├── foo
 │   ├── feature-a.txt
 │   └── i-am-foo.txt
-└── zim
-    ├── feature-a.txt
-    └── i-am-zim.txt
+└── lib
+    └── zim
+        ├── feature-a.txt
+        └── i-am-zim.txt
 
-3 directories, 6 files
-$ head */feature-a.txt
+4 directories, 6 files
+$ head **/feature-a.txt
 ==> bar/feature-a.txt <==
 I am bar’s side of feature A
 
 ==> foo/feature-a.txt <==
 I am a new foo feature
 
-==> zim/feature-a.txt <==
+==> lib/zim/feature-a.txt <==
 I am a new zim feature
 #+end_example
 
@@ -302,7 +308,12 @@ The outer program structure is a flat bash script which loops over every repo su
 
 <<prep-dir>>
 
-while read repourl reponame; do
+# Note this is top-level in the script so it’s reading from the script’s stdin
+while read repourl reponame repopath; do
+    if [[ -z "$repopath" ]]; then
+        repopath="$reponame"
+    fi
+
     <<handle-remote>>
 done
 
@@ -339,9 +350,9 @@ This is the money shot.
 #+NAME: handle-branch
 #+BEGIN_SRC sh
 <<ensure-on-target-branch-in-monorepo>>
-mkdir -p "$reponame"
+mkdir -p "$repopath"
 git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
-git --work-tree "./$reponame/" checkout "$reponame/$branch" -- .
+git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
 git add -A
 git commit -m "Merge $reponame/$branch"
 #+END_SRC
