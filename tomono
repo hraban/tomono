@@ -27,9 +27,20 @@ else
 	# There isn’t anything special about --continue, really.
 fi
 
+(
+	cd .git/refs
+	mv tags tags-aux
+)
+
 while read repourl reponame; do
     git remote add "$reponame" "$repourl"
-    git fetch --no-tags "$reponame"
+    git fetch --tags --atomic "$reponame"
+    (
+    	cd .git/refs
+    	if [[ -d tags ]]; then
+    		mv tags "tags-aux/$reponame"
+    	fi
+    )
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
         if git checkout --orphan "$branch"; then
             git rm -rf . || :
@@ -44,6 +55,11 @@ while read repourl reponame; do
         git commit -m "Merge $reponame/$branch"
     done
 done
+
+(
+	cd .git/refs
+	mv tags-aux tags
+)
 
 # Copyright © 2020, 2022 Hraban Luyat
 # 

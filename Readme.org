@@ -73,7 +73,7 @@ TODO to bring this cleanroom reimplementation up to date with the old version:
 - [X] create fresh monorepo from imported files
 - [X] =MONOREPO_NAME=
 - [X] =--continue=
-- [ ] namespaced tags
+- [X] namespaced tags
 - [ ] folder names (third arg in stdin)
 - [ ] output relevant progress info and hide irrelevant output
 
@@ -273,6 +273,23 @@ I am a new foo feature
 I am a new zim feature
 #+end_example
 
+** Tags
+
+Tags are namespaced per remote, to avoid clashes. If your remote =foo= and =bar= both have a tag =v1.0.0=, your monorepo ends up with =foo/v1.0.0= and =bar/v1.0.0= pointing at their relevant commits.
+
+N.B.: This concerns light-weight tags! Annotated tags are a different beast and unfortunately they can’t be rewritten this way.
+
+If you don’t like this rewriting, you can remove all tags, and fetch them fresh from the remotes:
+
+#+begin_src sh :eval never :export code :results none
+$ cat ... |  .../tomono
+$ cd core
+$ rm -rf .git/refs/tags
+$ git fetch --all --tags
+#+end_src
+
+Be prepared to deal with any conflicts!
+
 * Implementation
 
 The outer program structure is a flat bash script which loops over every repo supplied over stdin:
@@ -289,6 +306,8 @@ while read repourl reponame; do
     <<handle-remote>>
 done
 
+<<finalize>>
+
 # <<copyright>>
 #+END_SRC
 
@@ -303,7 +322,8 @@ Every repository is fetched and fully handled individually, and sequentially:
 #+NAME: handle-remote
 #+BEGIN_SRC shell :comments link :references yeye
   git remote add "$reponame" "$repourl"
-  git fetch --no-tags "$reponame"
+  git fetch --tags --atomic "$reponame"
+  <<namespace-remote-tags>>
   <<list-branches>> | while read branch ; do
       <<handle-branch>>
   done
@@ -424,6 +444,8 @@ else
 	cd "$MONOREPO_NAME"
 	# There isn’t anything special about --continue, really.
 fi
+
+<<prep-tags>>
 #+END_SRC
 
 Most of rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
@@ -474,6 +496,45 @@ git ls-remote --heads --refs "$reponame" | sed 's_[^ ]* *refs/heads/__'
 #+end_src
 
 Originally suggested in a [[https://github.com/hraban/tomono/pull/39][PR 39]], I’ve decided not to use this because =git-ls-remote= actively queries the remote to list its branches, rather than inspecting the local state of whatever we just fetched. That feels like a race condition at best, and becomes very annoying if you’re dealing with password protected remotes or otherwise inaccessible repos.
+
+** Tags
+
+Light weight tags are just refs, and they’re all stored in a predictable place in the =.git= directory. The easiest way to manage them is to juggle that directory after each fetch.
+
+We start by storing all our existing tags somewhere out of git’s reach:
+
+#+caption: prep-tags
+#+name: prep-tags
+#+begin_src sh :references yes
+(
+	cd .git/refs
+	mv tags tags-aux
+)
+#+end_src
+
+and once everything is done, we move them back:
+
+#+caption: finalize
+#+name: finalize
+#+begin_src sh :references yes
+(
+	cd .git/refs
+	mv tags-aux tags
+)
+#+end_src
+
+The real magic happens just after a remote has been fetched (see [[handle-remote]]). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
+
+#+caption: namespace-remote-tags
+#+name: namespace-remote-tags
+#+begin_src sh :references yes
+(
+	cd .git/refs
+	if [[ -d tags ]]; then
+		mv tags "tags-aux/$reponame"
+	fi
+)
+#+end_src
 
 ** Error flags, warnings, debug
 
