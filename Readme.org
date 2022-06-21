@@ -149,9 +149,47 @@ This will create a new directory, =core=, where you can find a git tree which lo
 ,* 2c48815 root commit for monorepo branch branch-b
 #+end_example
 
+** Pull in new changes from a remote
+
+It’s possible that while you’re working on setting up your fresh monorepo, new changes have been pushed to the existing single repos:
+
+#+begin_src sh :exports code :eval never-export :results none
+(
+	cd foo
+	echo New changes >> i-am-foo.txt
+	git commit -va -m 'New changes to foo'
+)
+#+end_src
+
+Because their history was imported verbatim and nothing has been rewritten, you can import those changes into the monorepo.
+
+First, fetch the changes from the remote:
+
+#+begin_src sh :exports code :eval never :results none
+$ cd core
+$ git fetch foo
+#+end_src
+
+Now merge your changes using subtree merge:
+
+#+begin_src sh
+git checkout master
+git merge -X subtree=foo/ foo/master
+#+end_src
+
+And the updates should be reflected in the monorepo:
+
+#+begin_src sh :exports code :eval never :results none
+$ cat foo/i-am-foo.txt
+This is foo
+New changes
+#+end_src
+
+I used the branch master in this example, but any branch works the same way.
+
 ** Continue
 
-Now imagine continuing with a third repository:
+Now imagine you want to pull in a third repository into the monorepo:
 
 #+begin_src sh :exports code :eval never-export :results none
 mkdir zim
