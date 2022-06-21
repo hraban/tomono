@@ -2,15 +2,30 @@
 # [[file:Readme.org::top-level][top-level]]
 set -euo pipefail ${DEBUGSH+-x}
 
+# Poor man’s arg parse 🤷‍♀️
+arg="${1-}"
 : "${MONOREPO_NAME:=core}"
-if [[ -d "$MONOREPO_NAME" ]]; then
-    >&2 echo "monorepo directory $MONOREPO_NAME already exists"
-    exit 1
-fi
 
-mkdir "$MONOREPO_NAME"
-cd "$MONOREPO_NAME"
-git init
+if [[ "$arg" == "" ]]; then
+	if [[ -d "$MONOREPO_NAME" && "$arg" != "--continue" ]]; then
+		>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+		exit 1
+	fi
+	mkdir "$MONOREPO_NAME"
+	cd "$MONOREPO_NAME"
+	git init
+elif [[ "$arg" != "--continue" ]]; then
+	>&2 echo "Unexpected argument: $arg"
+	>&2 echo
+	>&2 echo "Usage: $0 [--continue]"
+	exit 1
+elif [[ ! -d "$MONOREPO_NAME" ]]; then
+	>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
+	exit 1
+else
+	cd "$MONOREPO_NAME"
+	# There isn’t anything special about --continue, really.
+fi
 
 while read repourl reponame; do
     git remote add "$reponame" "$repourl"

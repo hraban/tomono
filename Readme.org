@@ -46,9 +46,23 @@ No need to do anything. This script does not handle any master / main branch in 
 
 Make sure your own computer has the right branch set up in its =init.defaultBranch= setting.
 
+** Continue existing migration
+
+Large teams can’t afford to “stop the world” while a migration is in progress. You’ll be fixing stuff and pulling in new repositories as you go.
+
+Here’s how to pull in an entirely new set of repositories:
+
+#+begin_src sh :eval never :exports code
+/path/to/tomono --continue < my-new-repos.txt
+#+end_src
+
+Make sure you have your environment set up exactly the same as above. Particularly, you must be in the parent dir of the monorepo.
+
 * Example
 
 Run these commands to set up a fresh directory with git monorepos that you can later merge:
+
+** Initial setup of fake repos
 
 #+begin_src sh :exports code :eval never-export :results none
 d="$(mktemp -d)"
@@ -92,6 +106,8 @@ You now have two directories:
 - =foo= (branches: =master=, =branch-a=)
 - =bar= (branches: =master=, =branch-a=, =branch-b=)
 
+** Combine into monorepo
+
 Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, from that same directory:
 
 #+begin_src sh :exports code :eval never-export :results none
@@ -133,9 +149,76 @@ This will create a new directory, =core=, where you can find a git tree which lo
 ,* 2c48815 root commit for monorepo branch branch-b
 #+end_example
 
+** Continue
+
+Now imagine continuing with a third repository:
+
+#+begin_src sh :exports code :eval never-export :results none
+mkdir zim
+(
+    cd zim
+    git init
+    echo "This is zim" > i-am-zim.txt
+    git add -A
+    git commit -m "zim’s master"
+    git checkout -b branch-a
+    echo "I am a new zim feature" > feature-a.txt
+    git add -A
+    git commit -m "zim’s feature branch A"
+)
+#+end_src
+
+Continue importing it:
+
+#+begin_src sh :exports code :eval never-export :results none
+echo "$PWD/zim zim" | /path/to/tomono --continue
+#+end_src
+
+And the result is that it gets imported into the existing monorepo, alongside the existing two projects:
+
+#+begin_example
+$ cd core
+$ git checkout master
+Switched to branch 'master'
+$ tree
+.
+├── bar
+│   └── i-am-bar.txt
+├── foo
+│   └── i-am-foo.txt
+└── zim
+    └── i-am-zim.txt
+
+3 directories, 3 files
+$ git checkout branch-a
+Switched to branch 'branch-a'
+$ tree
+.
+├── bar
+│   ├── feature-a.txt
+│   └── i-am-bar.txt
+├── foo
+│   ├── feature-a.txt
+│   └── i-am-foo.txt
+└── zim
+    ├── feature-a.txt
+    └── i-am-zim.txt
+
+3 directories, 6 files
+$ head */feature-a.txt
+==> bar/feature-a.txt <==
+I am bar’s side of feature A
+
+==> foo/feature-a.txt <==
+I am a new foo feature
+
+==> zim/feature-a.txt <==
+I am a new zim feature
+#+end_example
+
 * Implementation
 
-The outer program structure is a flat bash script which loops over every repo supplied over stdin.
+The outer program structure is a flat bash script which loops over every repo supplied over stdin:
 
 #+CAPTION: top-level
 #+NAME: top-level
@@ -255,21 +338,40 @@ Ah well. Don't start your branch names with =-=, I guess?
 
 ** Set up the monorepo directory
 
-We create a fresh directory for this script to run in, and bail if it already exists to avoid mangling an existing repo.
+We create a fresh directory for this script to run in, or continue on an existing one if the =--continue= flag is passed.
 
 #+CAPTION: prep-dir
 #+NAME: prep-dir
 #+BEGIN_SRC sh
+# Poor man’s arg parse 🤷‍♀️
+arg="${1-}"
 : "${MONOREPO_NAME:=core}"
-if [[ -d "$MONOREPO_NAME" ]]; then
-    >&2 echo "monorepo directory $MONOREPO_NAME already exists"
-    exit 1
-fi
 
-mkdir "$MONOREPO_NAME"
-cd "$MONOREPO_NAME"
-git init
+if [[ "$arg" == "" ]]; then
+	if [[ -d "$MONOREPO_NAME" && "$arg" != "--continue" ]]; then
+		>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+		exit 1
+	fi
+	mkdir "$MONOREPO_NAME"
+	cd "$MONOREPO_NAME"
+	git init
+elif [[ "$arg" != "--continue" ]]; then
+	>&2 echo "Unexpected argument: $arg"
+	>&2 echo
+	>&2 echo "Usage: $0 [--continue]"
+	exit 1
+elif [[ ! -d "$MONOREPO_NAME" ]]; then
+	>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
+	exit 1
+else
+	cd "$MONOREPO_NAME"
+	# There isn’t anything special about --continue, really.
+fi
 #+END_SRC
+
+Most of rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
+
+It’s horrible and kludgy but I just want to get something working out the door, for now.
 
 ** List individual branches
 
