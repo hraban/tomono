@@ -591,6 +591,9 @@ Also, TODO: #+PROPERTY:     header-args:shell :comments link
 
 ;; TODO: Don't define as global functions? How do you do this in EL?
 
+(require 'dash)
+(require 's)
+
 (defun org-info-name (info)
   (nth 4 info))
 
@@ -650,21 +653,21 @@ Note this function trusts the input string has those delimiters"
           (register-refs name (extract-refs body)))))
     (list forward-refs back-refs)))
 
-(defun insert-reference (ref)
-  (insert-ln "- [[" ref "][" ref "]]"))
+(defun tomono--format-ref (ref)
+  (format "[[%s][%s]]" ref ref))
 
 (defun insert-references-block (info title refs)
   (when refs
-    (message "Formatting references block %S: %S" title refs)
-    (insert-ln title)
-    (mapc #'insert-reference refs)))
+    (insert title)
+    (->> refs (mapcar 'tomono--format-ref) (s-join ", ") insert-ln)
+    (newline)))
 
 (defun insert-references (info forward back)
   (when (or forward back)
     (newline)
     (insert-ln ":REFERENCES:")
-    (insert-references-block info "References:" forward)
-    (insert-references-block info "Used by:" back)
+    (insert-references-block info "References: " forward)
+    (insert-references-block info "Used by: " back)
     (insert-ln ":END:")))
 
 (defun get-references (name)
