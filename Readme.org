@@ -2,7 +2,8 @@
 #+DESCRIPTION:  Migrate your multirepo to a monorepo using a bash script
 #+AUTHOR:       Hraban Luyat
 #+EMAIL:        hraban@0brg.net
-#+PROPERTY:     header-args       :noweb no-export
+#+PROPERTY:     header-args       :noweb no-export :eval never
+#+EXPORT_FILE_NAME: index.html
 #+html_head:    <link rel=stylesheet href=./style.css>
 #+options: html-link-use-abs-url:nil html-postamble:auto html-preamble:t ':t
 #+options: html-scripts:t html-style:t html5-fancy:t tex:html creator:t date:t author:nil

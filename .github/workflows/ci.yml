@@ -33,3 +33,38 @@ jobs:
       -
         name: Tangle code and export HTML
         run: docker-compose run --rm build
+      -
+        uses: actions/upload-artifact@v3
+        with:
+          name: index-html-${{github.sha}}
+          path: index.html
+
+  deploy_pages:
+    timeout-minutes: 10
+    if: ${{ github.ref_type == 'branch' && github.ref == 'refs/heads/cleanroom' }}
+    name: "Deploy the HTML to GitHub Pages"
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+      - name: Remove files before artifact download
+        run: rm -rf index.html
+      -
+        uses: actions/download-artifact@v3
+        with:
+          name: index-html-${{github.sha}}
+      -
+        name: configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "<>"
+      -
+        name: "Commit the HTML to gh-pages branch"
+        run: |
+          git add -A
+          git commit -m "Update gh-pages from ${{github.ref}}"
+          git push origin gh-pages
