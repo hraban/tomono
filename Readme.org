@@ -568,41 +568,19 @@ every command before it gets executed.
 set -euo pipefail ${DEBUGSH+-x}
 #+END_SRC
 
-* Copyright and license
-
-This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start.
-
-The license and copyright attribution of this entire document can now be set:
-
-#+CAPTION: copyright
-#+NAME: copyright
-#+BEGIN_SRC fundamental
-Copyright © 2020, 2022 Hraban Luyat
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, version 3 of the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#+END_SRC
-
-I did not look at the original implementation at all while developing this.
-
 * Building the code                                                :noexport:
-Here is code to build the exported HTML
 
+The easiest way to build everything in this repo is using docker:
 
-#+BEGIN_COMMENT
-Also, TODO: #+PROPERTY:     header-args:shell :comments link
-#+END_COMMENT
+#+begin_src sh :exports code :results none :eval never-export
+docker-compose run --rm build
+#+end_src
 
-#+BEGIN_SRC emacs-lisp :exports none :results none :tangle export-html.el
+Most of the code in this repository is generated from this readme file. This can be done in stock Emacs, by opening this file and calling =M-x org-babel-tangle=.
+
+This file can also be exported to HTML. Executing the block below, before you export it, adds some extra flourish to that exported file:
+
+#+BEGIN_SRC emacs-lisp :exports code :results none :tangle export-html.el
 ;; This is configuration for org mode itself, not tomono src code. Don't export this.
 
 ;; TODO: Clean this up. No globals etc.
@@ -706,3 +684,29 @@ Note this function trusts the input string has those delimiters"
 (let ((org-html-htmlize-output-type 'css))
   (org-html-export-to-html))
 #+END_SRC
+
+* Copyright and license
+
+This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start.
+
+The license and copyright attribution of this entire document can now be set:
+
+#+CAPTION: copyright
+#+NAME: copyright
+#+BEGIN_SRC fundamental
+Copyright © 2020, 2022 Hraban Luyat
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#+END_SRC
+
+I did not look at the original implementation at all while developing this.
