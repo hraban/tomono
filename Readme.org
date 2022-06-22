@@ -364,11 +364,15 @@ git add -A
 git commit -m "Merge $reponame/$branch" --allow-empty
 #+END_SRC
 
+N.B.: We check out the full tree every time, and commit it. There is probably some high-tech git trick we could pull to do this in cache only, without actually touching the filesystem, but I’ve found this method to be reliable and “fast enough.” It’s actually doggone slow, but hopefully you only migrate to a monorepo once in your entire life, so amortised it ends up being a wash.
+
+That being said, mercy on your soul if you try to migrate the linux kernel.
+
 *** Ensure we are on the right branch
 
-We are given the variable =$branch= which is the final name of the branch we want to operate on. It is the same as the name of the branch in each individual target repo.
-
 In this snippet, we ensure that we are ready to merge fresh code from a subrepo into this branch: either we checkout an existing branch in the monorepo by this name, or we create a fresh one.
+
+We are given the variable =$branch= which is the final name of the branch we want to operate on. It is the same as the name of the branch in each individual target repo.
 
 #+CAPTION: ensure-on-target-branch-in-monorepo
 #+NAME: ensure-on-target-branch-in-monorepo
@@ -387,7 +391,7 @@ Technically; we do it the other way around :) First I try to create a fresh bran
 Neat side effect of =git checkout --orphan=: if the branch already exists, but has no commits at all on it, the operation succeeds as if the branch were freshly created. This helps us with the very first commit on =master=, which will have been automatically created as part of =git init=:
 
 #+begin_comment
-I'm sure there is a cooler way to do the below, something involving =:results inline :exports both=, but I find my current options lacking. The HTML output is unreadable.
+I'm sure there is a cooler way to do this, but I find my current options lacking. The HTML output is unreadable.
 
 E.g. the HTML export of this:
 
