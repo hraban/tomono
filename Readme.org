@@ -15,7 +15,7 @@ This script merges multiple independent tiny repositories into a single "monorep
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
 
-#+begin_src sh :eval never :exports code
+#+begin_src shell :eval never :exports code
 $ cat my-repos.txt
 git@github.com:mycompany/my-repo-abc.git abc
 git@github.com:mycompany/my-repo-def.git def
@@ -49,7 +49,7 @@ git@github.com:mycompany/my-lib-zzz.git   zzz  lib/zzz
 
 Concrete example:
 
-#+begin_src sh :eval never :exports code
+#+begin_src shell :eval never :exports code
 $ cat my-repos.txt | /path/to/tomono
 #+end_src
 
@@ -59,7 +59,7 @@ That should be all ✅.
 
 Don’t like =core=? Set a different name through an envvar before running the script:
 
-#+begin_src sh
+#+begin_src shell
 export MONOREPO_NAME=the-big-repo
 #+end_src
 
@@ -75,7 +75,7 @@ Large teams can’t afford to “stop the world” while a migration is in progr
 
 Here’s how to pull in an entirely new set of repositories:
 
-#+begin_src sh :eval never :exports code
+#+begin_src shell :eval never :exports code
 /path/to/tomono --continue < my-new-repos.txt
 #+end_src
 
@@ -87,7 +87,7 @@ Run these commands to set up a fresh directory with git monorepos that you can l
 
 ** Initial setup of fake repos
 
-#+begin_src sh :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none
 d="$(mktemp -d)"
 echo "Setting up fresh multi-repos in $d"
 cd "$d"
@@ -134,7 +134,7 @@ You now have two directories:
 
 Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, from that same directory:
 
-#+begin_src sh :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none
 tomono <<EOF
 $PWD/foo foo
 $PWD/bar bar
@@ -177,7 +177,7 @@ This will create a new directory, =core=, where you can find a git tree which lo
 
 It’s possible that while you’re working on setting up your fresh monorepo, new changes have been pushed to the existing single repos:
 
-#+begin_src sh :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none
 (
 	cd foo
 	echo New changes >> i-am-foo.txt
@@ -189,21 +189,21 @@ Because their history was imported verbatim and nothing has been rewritten, you 
 
 First, fetch the changes from the remote:
 
-#+begin_src sh :exports code :eval never :results none
+#+begin_src shell :exports code :eval never :results none
 $ cd core
 $ git fetch foo
 #+end_src
 
 Now merge your changes using subtree merge:
 
-#+begin_src sh
+#+begin_src shell
 git checkout master
 git merge -X subtree=foo/ foo/master
 #+end_src
 
 And the updates should be reflected in the monorepo:
 
-#+begin_src sh :exports code :eval never :results none
+#+begin_src shell :exports code :eval never :results none
 $ cat foo/i-am-foo.txt
 This is foo
 New changes
@@ -215,7 +215,7 @@ I used the branch master in this example, but any branch works the same way.
 
 Now imagine you want to pull in a third repository into the monorepo:
 
-#+begin_src sh :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none
 mkdir zimlib
 (
     cd zimlib
@@ -232,7 +232,7 @@ mkdir zimlib
 
 Continue importing it:
 
-#+begin_src sh :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none
 echo "$PWD/zimlib zim lib/zim" | /path/to/tomono --continue
 #+end_src
 
@@ -290,7 +290,7 @@ N.B.: This concerns light-weight tags! Annotated tags are a different beast and 
 
 If you don’t like this rewriting, you can remove all tags, and fetch them fresh from the remotes:
 
-#+begin_src sh :eval never :export code :results none
+#+begin_src shell :eval never :export code :results none
 $ cat ... |  .../tomono
 $ cd core
 $ rm -rf .git/refs/tags
@@ -309,7 +309,7 @@ The outer program structure is a flat bash script which loops over every repo su
 
 #+CAPTION: top-level
 #+NAME: top-level
-#+BEGIN_SRC shell :tangle tomono :comments link :shebang "#!/usr/bin/env bash" :references yes
+#+BEGIN_SRC shell :tangle tomono :shebang "#!/usr/bin/env bash" :references yes
 
 <<set-flags>>
 
@@ -338,7 +338,7 @@ Every repository is fetched and fully handled individually, and sequentially:
 
 #+CAPTION: handle-remote
 #+NAME: handle-remote
-#+BEGIN_SRC shell :comments link :references yeye
+#+BEGIN_SRC shell :references yeye
   git remote add "$reponame" "$repourl"
   git fetch --tags --atomic "$reponame"
   <<namespace-remote-tags>>
@@ -355,7 +355,7 @@ This is the money shot.
 
 #+CAPTION: handle-branch
 #+NAME: handle-branch
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
 <<ensure-on-target-branch-in-monorepo>>
 mkdir -p "$repopath"
 git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
@@ -376,7 +376,7 @@ We are given the variable =$branch= which is the final name of the branch we wan
 
 #+CAPTION: ensure-on-target-branch-in-monorepo
 #+NAME: ensure-on-target-branch-in-monorepo
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
 if git checkout --orphan "$branch"; then
     git rm -rf --cached . || :
     git clean -dfx
@@ -395,14 +395,14 @@ I'm sure there is a cooler way to do this, but I find my current options lacking
 
 E.g. the HTML export of this:
 
-#+begin_src sh :tangle no :results inline :exports both
+#+begin_src shell :tangle no :results verbatim :exports both
 date
 #+end_src
 
 results in two completely separate blocks. This makes a interactive shell session with multiple individual commands hard to follow. Would be nice to have some sort of plugin for this.
 #+end_comment
 
-#+begin_src sh :tangle no :exports code
+#+begin_src shell :tangle no :exports code
 $ cd "$(mktemp -d)"
 
 $ git init
@@ -442,7 +442,7 @@ We create a fresh directory for this script to run in, or continue on an existin
 
 #+CAPTION: prep-dir
 #+NAME: prep-dir
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
 # Poor man’s arg parse :/
 arg="${1-}"
 : "${MONOREPO_NAME:=core}"
@@ -481,7 +481,7 @@ I want a single branch name per line on stdout, for a single specific remote:
 
 #+CAPTION: list-branches
 #+NAME: list-branches
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
 git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)"
 #+END_SRC
 
@@ -493,7 +493,7 @@ Solutions I abandoned, due to one short-coming or another:
 
 The most straight-forward way to list branch names:
 
-#+begin_src sh :eval never :exports code :results none
+#+begin_src shell :eval never :exports code :results none
 $ git branch -r
   bar/branch-a
   bar/branch-b
@@ -506,7 +506,7 @@ This could be combined with =grep= to filter all branches for a specific remote,
 
 **** =find .git/refs/hooks=
 
-#+begin_src sh
+#+begin_src shell
 ( cd ".git/refs/remotes/$reponame" && find . -type f -mindepth 1 | sed -e s/..// )
 #+end_src
 
@@ -514,7 +514,7 @@ Closer, but ugly, and I got reports that it missed some branches (although I was
 
 **** =git ls-remote=
 
-#+begin_src sh
+#+begin_src shell
 git ls-remote --heads --refs "$reponame" | sed 's_[^ ]* *refs/heads/__'
 #+end_src
 
@@ -528,7 +528,7 @@ We start by storing all our existing tags somewhere out of git’s reach:
 
 #+caption: prep-tags
 #+name: prep-tags
-#+begin_src sh :references yes
+#+begin_src shell :references yes
 (
 	cd .git/refs
 	mv tags tags-aux
@@ -539,7 +539,7 @@ and once everything is done, we move them back:
 
 #+caption: finalize
 #+name: finalize
-#+begin_src sh :references yes
+#+begin_src shell :references yes
 (
 	cd .git/refs
 	mv tags-aux tags
@@ -550,7 +550,7 @@ The real magic happens just after a remote has been fetched (see [[handle-remote
 
 #+caption: namespace-remote-tags
 #+name: namespace-remote-tags
-#+begin_src sh :references yes
+#+begin_src shell :references yes
 (
 	cd .git/refs
 	if [[ -d tags ]]; then
@@ -575,7 +575,7 @@ every command before it gets executed.
 
 #+CAPTION: set-flags
 #+NAME: set-flags
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
 set -euo pipefail ${DEBUGSH+-x}
 #+END_SRC
 
@@ -583,7 +583,7 @@ set -euo pipefail ${DEBUGSH+-x}
 
 The easiest way to build everything in this repo is using docker:
 
-#+begin_src sh :exports code :results none :eval never-export
+#+begin_src shell :exports code :results none :eval never-export
 docker-compose run --rm build
 #+end_src
 
