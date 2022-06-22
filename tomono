@@ -23,6 +23,10 @@ elif [[ ! -d "$MONOREPO_NAME" ]]; then
 	exit 1
 else
 	cd "$MONOREPO_NAME"
+	if git status --porcelain | grep . ; then
+		>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
+		exit 1
+	fi
 	# There isn’t anything special about --continue, really.
 fi
 
