@@ -230,8 +230,16 @@ mkdir zimlib
     echo "I am a new zim feature" > feature-a.txt
     git add -A
     git commit -m "zim’s feature branch A"
+    # And some more weird stuff, to mess with you
+    git checkout master
+    git checkout -d
+    echo top secret > james-bond.txt
+    git add -A
+    git commit -m "I am unreachable"
+    git tag leaking-you HEAD
     git checkout --orphan empty-branch
     git rm --cached -r .
+    git clean -dfx
     git commit -m "zim’s tricky empty orphan branch" --allow-empty
 )
 #+end_src
@@ -294,13 +302,10 @@ Tags are namespaced per remote, to avoid clashes. If your remote =foo= and =bar=
 
 N.B.: This concerns light-weight tags! Annotated tags are a different beast and unfortunately they can’t be rewritten this way.
 
-If you don’t like this rewriting, you can remove all tags, and fetch them fresh from the remotes:
+If you don’t like this rewriting, you can fetch all tags from a specific remote to the top-level of the monorepo:
 
 #+begin_src shell :eval never :export code :results none
-$ cat ... |  .../tomono
-$ cd core
-$ rm -rf .git/refs/tags
-$ git fetch --all --tags
+$ git fetch --tags foo
 #+end_src
 
 Be prepared to deal with any conflicts!
@@ -342,13 +347,19 @@ Every repository is fetched and fully handled individually, and sequentially:
 #+CAPTION: handle-remote
 #+NAME: handle-remote
 #+BEGIN_SRC shell :references yes
-  git remote add "$reponame" "$repourl"
-  git fetch --tags --atomic "$reponame"
-  <<namespace-remote-tags>>
-  <<list-branches>> | while read branch ; do
-      <<handle-branch>>
-  done
+git remote add "$reponame" "$repourl"
+git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
+git config "remote.$reponame.tagOpt" --no-tags
+git fetch --atomic "$reponame"
+
+<<list-branches>> | while read branch ; do
+    <<handle-branch>>
+done
 #+END_SRC
+
+The remotes are configured to make sure that a default fetch always fetch all tags, and also puts them in their own namespace. The default refspec for tags is =+refs/tags/*:refs/tags/*=, as you can see that puts everything from the remote at the same level in your monorepo. Obviously that will cause clashes, so we add the reponame as an extra namespace.
+
+The =--no-tags= option is the complement to =--tags=, which has that default refspec we don’t want. That’s why we disable it and roll our own, entirely.
 
 ** Per branch (this is where the magic happens)
 
@@ -427,7 +438,7 @@ else
 fi
 #+END_SRC
 
-Most of rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
+Most of this rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
 
 It’s horrible and kludgy but I just want to get something working out the door, for now.
 
@@ -476,51 +487,6 @@ git ls-remote --heads --refs "$reponame" | sed 's_[^ ]* *refs/heads/__'
 
 Originally suggested in a [[https://github.com/hraban/tomono/pull/39][PR 39]], I’ve decided not to use this because =git-ls-remote= actively queries the remote to list its branches, rather than inspecting the local state of whatever we just fetched. That feels like a race condition at best, and becomes very annoying if you’re dealing with password protected remotes or otherwise inaccessible repos.
 
-** Tags
-
-Light weight tags are just refs, and they’re all stored in a predictable place in the =.git= directory. The easiest way to manage them is to juggle that directory after each fetch.
-
-We start by storing all our existing tags somewhere out of git’s reach:
-
-#+caption: prep-tags
-#+name: prep-tags
-#+begin_src shell :references yes
-(
-	cd .git/refs
-	mv tags tags-aux
-)
-#+end_src
-
-and once everything is done, we move them back:
-
-
-#+caption: finalize-tags
-#+name: finalize-tags
-#+begin_src shell :references yes
-(
-	cd .git/refs
-	mv tags-aux tags
-)
-#+end_src
-
-The real magic happens just after a remote has been fetched (see [[handle-remote][=handle-remote=]]). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
-
-#+caption: namespace-remote-tags
-#+name: namespace-remote-tags
-#+begin_src shell :references yes
-(
-	cd .git/refs
-	if [[ -d tags ]]; then
-		tagdir="tags-aux/$reponame"
-		mkdir -p "$tagdir"
-		rmdir "$tagdir"
-		mv tags "$tagdir"
-	fi
-)
-#+end_src
-
-The =mkdir -p .. ; rmdir ..= trick is the easiest way to create a directory’s parent, without creating the directory itself. I don’t like process substitution (=mkdir "$(dirname ...)"=, yuck).
-
 ** Init & finalize
 
 Initialization is what you’d expect from a shell script:
@@ -532,18 +498,14 @@ Initialization is what you’d expect from a shell script:
 
 <<prep-dir>>
 
-<<prep-tags>>
-
 empty_tree="$(git hash-object -t tree /dev/null)"
 #+end_src
 
-On the other side, when done, clean up the tags and update the working tree to whatever the current branch is to avoid any confusion:
+On the other side, when done, update the working tree to whatever the current branch is to avoid any confusion:
 
 #+caption: finalize
 #+name: finalize
 #+begin_src shell
-<<finalize-tags>>
-
 git checkout .
 #+end_src
 

@@ -30,11 +30,6 @@ else
 	# There isn’t anything special about --continue, really.
 fi
 
-(
-	cd .git/refs
-	mv tags tags-aux
-)
-
 empty_tree="$(git hash-object -t tree /dev/null)"
 
 # Note this is top-level in the script so it’s reading from the script’s stdin
@@ -44,16 +39,10 @@ while read repourl reponame repopath; do
     fi
 
     git remote add "$reponame" "$repourl"
-    git fetch --tags --atomic "$reponame"
-    (
-    	cd .git/refs
-    	if [[ -d tags ]]; then
-    		tagdir="tags-aux/$reponame"
-    		mkdir -p "$tagdir"
-    		rmdir "$tagdir"
-    		mv tags "$tagdir"
-    	fi
-    )
+    git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
+    git config "remote.$reponame.tagOpt" --no-tags
+    git fetch --atomic "$reponame"
+    
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
             git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
@@ -66,11 +55,6 @@ while read repourl reponame repopath; do
         git commit -m "Merge $reponame/$branch" --allow-empty
     done
 done
-
-(
-	cd .git/refs
-	mv tags-aux tags
-)
 
 git checkout .
 
