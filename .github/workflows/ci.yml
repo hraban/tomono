@@ -41,7 +41,7 @@ jobs:
 
   deploy_pages:
     timeout-minutes: 10
-    if: ${{ github.ref_type == 'branch' && github.ref == 'refs/heads/cleanroom' }}
+    if: ${{ github.ref_type == 'branch' && github.ref == 'refs/heads/master' }}
     name: "Deploy the HTML to GitHub Pages"
     runs-on: ubuntu-latest
     needs: build
