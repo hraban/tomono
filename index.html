@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2022-06-22 Wed 06:00 -->
+<!-- 2022-06-22 Wed 08:32 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Multi- to Monorepo Migration</title>
@@ -222,47 +222,47 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org0f423d9">1. Features</a></li>
-<li><a href="#org6da516a">2. Usage</a>
+<li><a href="#org3c116dc">1. Features</a></li>
+<li><a href="#org3d44af9">2. Usage</a>
 <ul>
-<li><a href="#orgbc4aa68">2.1. Custom name for monorepo directory</a></li>
-<li><a href="#orgd7211d9">2.2. Custom “master” / “main” branch name</a></li>
-<li><a href="#org5d3feba">2.3. Continue existing migration</a></li>
+<li><a href="#org06daa7b">2.1. Custom name for monorepo directory</a></li>
+<li><a href="#orgc543840">2.2. Custom “master” / “main” branch name</a></li>
+<li><a href="#org15a719e">2.3. Continue existing migration</a></li>
 </ul>
 </li>
-<li><a href="#org47ac480">3. Example</a>
+<li><a href="#orgc74a845">3. Example</a>
 <ul>
-<li><a href="#orged796f8">3.1. Initial setup of fake repos</a></li>
-<li><a href="#org5d689a6">3.2. Combine into monorepo</a></li>
-<li><a href="#org702f599">3.3. Pull in new changes from a remote</a></li>
-<li><a href="#orgf2de32c">3.4. Continue</a></li>
-<li><a href="#orgb047d5d">3.5. Tags</a></li>
+<li><a href="#org08495b7">3.1. Initial setup of fake repos</a></li>
+<li><a href="#org12fb0bb">3.2. Combine into monorepo</a></li>
+<li><a href="#org81bcf27">3.3. Pull in new changes from a remote</a></li>
+<li><a href="#org0b2f8fc">3.4. Continue</a></li>
+<li><a href="#org0b4267e">3.5. Tags</a></li>
 </ul>
 </li>
-<li><a href="#orgc8fd93f">4. Implementation</a>
+<li><a href="#orgdc6e3f8">4. Implementation</a>
 <ul>
-<li><a href="#orga7656a8">4.1. Per repository</a></li>
-<li><a href="#org1d53ea7">4.2. Per branch (this is where the magic happens)</a>
+<li><a href="#org8643441">4.1. Per repository</a></li>
+<li><a href="#orgc25c8e1">4.2. Per branch (this is where the magic happens)</a>
 <ul>
-<li><a href="#org46e3d80">4.2.1. Ensure we are on the right branch</a></li>
+<li><a href="#org739e56f">4.2.1. Ensure we are on the right branch</a></li>
 </ul>
 </li>
-<li><a href="#org92ab5fc">4.3. Set up the monorepo directory</a></li>
-<li><a href="#org1cf61d6">4.4. List individual branches</a>
+<li><a href="#org4d25672">4.3. Set up the monorepo directory</a></li>
+<li><a href="#org0f1c7c4">4.4. List individual branches</a>
 <ul>
-<li><a href="#orgac5300b">4.4.1. Implementations that didn’t make the cut</a></li>
+<li><a href="#orga32d62b">4.4.1. Implementations that didn’t make the cut</a></li>
 </ul>
 </li>
-<li><a href="#orgd660636">4.5. Tags</a></li>
-<li><a href="#org319835f">4.6. Error flags, warnings, debug</a></li>
+<li><a href="#org71551ff">4.5. Tags</a></li>
+<li><a href="#orgc426b7a">4.6. Error flags, warnings, debug</a></li>
 </ul>
 </li>
-<li><a href="#org3c9659f">5. Copyright and license</a></li>
+<li><a href="#org38cd8c4">5. Copyright and license</a></li>
 </ul>
 </div>
 </nav>
 <p>
-This script merges multiple independent tiny repositories into a single &ldquo;monorepo&rdquo;. The summary is “every repo is moved into its own subdirectory, branches are merged.” See <a href="#org47ac480">3</a> for exactly how this works.
+This script merges multiple independent tiny repositories into a single &ldquo;monorepo&rdquo;. The summary is “every repo is moved into its own subdirectory, branches are merged.” See <a href="#orgc74a845">3</a> for exactly how this works.
 </p>
 
 <p>
@@ -270,7 +270,7 @@ Further reading: <a href="https://syslog.ravelin.com/multi-to-mono-repository-c8
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cat my-repos.txt
+<pre class="src src-shell">$ cat my-repos.txt
 git@github.com:mycompany/my-repo-abc.git abc
 git@github.com:mycompany/my-repo-def.git def
 $ /path/to/tomono &lt; my-repos.txt
@@ -281,8 +281,8 @@ $ cd core <span class="org-comment-delimiter"># </span><span class="org-comment"
 </pre>
 </div>
 
-<div id="outline-container-org0f423d9" class="outline-2">
-<h2 id="org0f423d9"><span class="section-number-2">1.</span> Features</h2>
+<div id="outline-container-org3c116dc" class="outline-2">
+<h2 id="org3c116dc"><span class="section-number-2">1.</span> Features</h2>
 <div class="outline-text-2" id="text-1">
 <ul class="org-ul">
 <li>🕙 Full history of all your prior repos is intact, no changes to checksums</li>
@@ -296,14 +296,14 @@ $ cd core <span class="org-comment-delimiter"># </span><span class="org-comment"
 </div>
 </div>
 
-<div id="outline-container-org6da516a" class="outline-2">
-<h2 id="org6da516a"><span class="section-number-2">2.</span> Usage</h2>
+<div id="outline-container-org3d44af9" class="outline-2">
+<h2 id="org3d44af9"><span class="section-number-2">2.</span> Usage</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Run the <code>tomono</code> script with your config on stdin, in the following format:
 </p>
 
-<pre class="example" id="org4896e21">
+<pre class="example" id="org28b3ce6">
 git@github.com:mycompany/my-repo-abc.git  abc
 git@github.com:mycompany/my-repo-def.git  def
 git@github.com:mycompany/my-lib-uuu.git   uuu  lib/uuu
@@ -315,7 +315,7 @@ Concrete example:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cat my-repos.txt | /path/to/tomono
+<pre class="src src-shell">$ cat my-repos.txt | /path/to/tomono
 </pre>
 </div>
 
@@ -324,22 +324,22 @@ That should be all ✅.
 </p>
 </div>
 
-<div id="outline-container-orgbc4aa68" class="outline-3">
-<h3 id="orgbc4aa68"><span class="section-number-3">2.1.</span> Custom name for monorepo directory</h3>
+<div id="outline-container-org06daa7b" class="outline-3">
+<h3 id="org06daa7b"><span class="section-number-3">2.1.</span> Custom name for monorepo directory</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 Don’t like <code>core</code>? Set a different name through an envvar before running the script:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh"><span class="org-builtin">export</span> <span class="org-variable-name">MONOREPO_NAME</span>=the-big-repo
+<pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">MONOREPO_NAME</span>=the-big-repo
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgd7211d9" class="outline-3">
-<h3 id="orgd7211d9"><span class="section-number-3">2.2.</span> Custom “master” / “main” branch name</h3>
+<div id="outline-container-orgc543840" class="outline-3">
+<h3 id="orgc543840"><span class="section-number-3">2.2.</span> Custom “master” / “main” branch name</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 No need to do anything. This script does not handle any master / main branch in any special way. It just merges whatever branches exist. Don’t have a “master” branch? None will be created.
@@ -351,8 +351,8 @@ Make sure your own computer has the right branch set up in its <code>init.defaul
 </div>
 </div>
 
-<div id="outline-container-org5d3feba" class="outline-3">
-<h3 id="org5d3feba"><span class="section-number-3">2.3.</span> Continue existing migration</h3>
+<div id="outline-container-org15a719e" class="outline-3">
+<h3 id="org15a719e"><span class="section-number-3">2.3.</span> Continue existing migration</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 Large teams can’t afford to “stop the world” while a migration is in progress. You’ll be fixing stuff and pulling in new repositories as you go.
@@ -363,7 +363,7 @@ Here’s how to pull in an entirely new set of repositories:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">/path/to/tomono --continue &lt; my-new-repos.txt
+<pre class="src src-shell">/path/to/tomono --continue &lt; my-new-repos.txt
 </pre>
 </div>
 
@@ -374,19 +374,19 @@ Make sure you have your environment set up exactly the same as above. Particular
 </div>
 </div>
 
-<div id="outline-container-org47ac480" class="outline-2">
-<h2 id="org47ac480"><span class="section-number-2">3.</span> Example</h2>
+<div id="outline-container-orgc74a845" class="outline-2">
+<h2 id="orgc74a845"><span class="section-number-2">3.</span> Example</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Run these commands to set up a fresh directory with git monorepos that you can later merge:
 </p>
 </div>
 
-<div id="outline-container-orged796f8" class="outline-3">
-<h3 id="orged796f8"><span class="section-number-3">3.1.</span> Initial setup of fake repos</h3>
+<div id="outline-container-org08495b7" class="outline-3">
+<h3 id="org08495b7"><span class="section-number-3">3.1.</span> Initial setup of fake repos</h3>
 <div class="outline-text-3" id="text-3-1">
 <div class="org-src-container">
-<pre class="src src-sh"><span class="org-variable-name">d</span>=<span class="org-string">"$(mktemp -d)"</span>
+<pre class="src src-shell"><span class="org-variable-name">d</span>=<span class="org-string">"$(mktemp -d)"</span>
 <span class="org-builtin">echo</span> <span class="org-string">"Setting up fresh multi-repos in $d"</span>
 <span class="org-builtin">cd</span> <span class="org-string">"$d"</span>
 
@@ -435,15 +435,15 @@ You now have two directories:
 </div>
 </div>
 
-<div id="outline-container-org5d689a6" class="outline-3">
-<h3 id="org5d689a6"><span class="section-number-3">3.2.</span> Combine into monorepo</h3>
+<div id="outline-container-org12fb0bb" class="outline-3">
+<h3 id="org12fb0bb"><span class="section-number-3">3.2.</span> Combine into monorepo</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
 Assuming the <code>tomono</code> script is in your <code>$PATH</code>, you can invoke it like this, from that same directory:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">tomono &lt;&lt;EOF
+<pre class="src src-shell">tomono &lt;&lt;EOF
 <span class="org-sh-heredoc">$PWD/foo foo</span>
 <span class="org-sh-heredoc">$PWD/bar bar</span>
 <span class="org-sh-heredoc">EOF</span>
@@ -454,7 +454,7 @@ Assuming the <code>tomono</code> script is in your <code>$PATH</code>, you can i
 This will create a new directory, <code>core</code>, where you can find a git tree which looks somewhat like this:
 </p>
 
-<pre class="example" id="org5f6103a">
+<pre class="example" id="orgd6fca2e">
 *   0803699 Merge bar/master (HEAD -&gt; master)
 |\
 * \   6745370 Merge foo/master
@@ -486,15 +486,15 @@ This will create a new directory, <code>core</code>, where you can find a git tr
 </div>
 </div>
 
-<div id="outline-container-org702f599" class="outline-3">
-<h3 id="org702f599"><span class="section-number-3">3.3.</span> Pull in new changes from a remote</h3>
+<div id="outline-container-org81bcf27" class="outline-3">
+<h3 id="org81bcf27"><span class="section-number-3">3.3.</span> Pull in new changes from a remote</h3>
 <div class="outline-text-3" id="text-3-3">
 <p>
 It’s possible that while you’re working on setting up your fresh monorepo, new changes have been pushed to the existing single repos:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">(
+<pre class="src src-shell">(
         <span class="org-builtin">cd</span> foo
         <span class="org-builtin">echo</span> New changes &gt;&gt; i-am-foo.txt
         git commit -va -m <span class="org-string">'New changes to foo'</span>
@@ -511,7 +511,7 @@ First, fetch the changes from the remote:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cd core
+<pre class="src src-shell">$ cd core
 $ git fetch foo
 </pre>
 </div>
@@ -521,7 +521,7 @@ Now merge your changes using subtree merge:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">git checkout master
+<pre class="src src-shell">git checkout master
 git merge -X <span class="org-variable-name">subtree</span>=foo/ foo/master
 </pre>
 </div>
@@ -531,7 +531,7 @@ And the updates should be reflected in the monorepo:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cat foo/i-am-foo.txt
+<pre class="src src-shell">$ cat foo/i-am-foo.txt
 This is foo
 New changes
 </pre>
@@ -543,15 +543,15 @@ I used the branch master in this example, but any branch works the same way.
 </div>
 </div>
 
-<div id="outline-container-orgf2de32c" class="outline-3">
-<h3 id="orgf2de32c"><span class="section-number-3">3.4.</span> Continue</h3>
+<div id="outline-container-org0b2f8fc" class="outline-3">
+<h3 id="org0b2f8fc"><span class="section-number-3">3.4.</span> Continue</h3>
 <div class="outline-text-3" id="text-3-4">
 <p>
 Now imagine you want to pull in a third repository into the monorepo:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">mkdir zimlib
+<pre class="src src-shell">mkdir zimlib
 (
     <span class="org-builtin">cd</span> zimlib
     git init
@@ -571,7 +571,7 @@ Continue importing it:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh"><span class="org-builtin">echo</span> <span class="org-string">"$PWD/zimlib zim lib/zim"</span> | /path/to/tomono --continue
+<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"$PWD/zimlib zim lib/zim"</span> | /path/to/tomono --continue
 </pre>
 </div>
 
@@ -583,7 +583,7 @@ Note that we used a different name for this subrepo, inside the <code>lib</code>
 The result is that it gets imported into the existing monorepo, alongside the existing two projects:
 </p>
 
-<pre class="example" id="org90c80e8">
+<pre class="example" id="orgc5769d9">
 $ cd core
 $ git checkout master
 Switched to branch 'master'
@@ -627,8 +627,8 @@ I am a new zim feature
 </div>
 </div>
 
-<div id="outline-container-orgb047d5d" class="outline-3">
-<h3 id="orgb047d5d"><span class="section-number-3">3.5.</span> Tags</h3>
+<div id="outline-container-org0b4267e" class="outline-3">
+<h3 id="org0b4267e"><span class="section-number-3">3.5.</span> Tags</h3>
 <div class="outline-text-3" id="text-3-5">
 <p>
 Tags are namespaced per remote, to avoid clashes. If your remote <code>foo</code> and <code>bar</code> both have a tag <code>v1.0.0</code>, your monorepo ends up with <code>foo/v1.0.0</code> and <code>bar/v1.0.0</code> pointing at their relevant commits.
@@ -643,7 +643,7 @@ If you don’t like this rewriting, you can remove all tags, and fetch them fres
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cat ... |  .../tomono
+<pre class="src src-shell">$ cat ... |  .../tomono
 $ cd core
 $ rm -rf .git/refs/tags
 $ git fetch --all --tags
@@ -657,8 +657,8 @@ Be prepared to deal with any conflicts!
 </div>
 </div>
 
-<div id="outline-container-orgc8fd93f" class="outline-2">
-<h2 id="orgc8fd93f"><span class="section-number-2">4.</span> Implementation</h2>
+<div id="outline-container-orgdc6e3f8" class="outline-2">
+<h2 id="orgdc6e3f8"><span class="section-number-2">4.</span> Implementation</h2>
 <div class="outline-text-2" id="text-4">
 <blockquote>
 <p>
@@ -671,7 +671,7 @@ The outer program structure is a flat bash script which loops over every repo su
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>top-level</label><pre class="src src-shell" id="orga303d06">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>top-level</label><pre class="src src-shell" id="org74171e8">
 &lt;&lt;set-flags&gt;&gt;
 
 <span class="org-sh-heredoc">&lt;&lt;prep-dir&gt;&gt;</span>
@@ -691,13 +691,13 @@ The outer program structure is a flat bash script which loops over every repo su
 </pre>
 </div>
 <p>
-References: <a href="#org6e00639">set-flags</a>, <a href="#org2048206">prep-dir</a>, <a href="#org92fb079">handle-remote</a>, <a href="#orgcb0b9e8">finalize</a>, <a href="#orgdf86eaa">copyright</a>
+References: <a href="#orge34ab69">set-flags</a>, <a href="#orgc0f7d75">prep-dir</a>, <a href="#orgf018888">handle-remote</a>, <a href="#orga255988">finalize</a>, <a href="#orga5d6f4a">copyright</a>
 </p>
 </div>
 
 
-<div id="outline-container-orga7656a8" class="outline-3">
-<h3 id="orga7656a8"><span class="section-number-3">4.1.</span> Per repository</h3>
+<div id="outline-container-org8643441" class="outline-3">
+<h3 id="org8643441"><span class="section-number-3">4.1.</span> Per repository</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 Every repository is fetched and fully handled individually, and sequentially:
@@ -709,7 +709,7 @@ Every repository is fetched and fully handled individually, and sequentially:
 </ol>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>handle-remote</label><pre class="src src-shell" id="org92fb079">git remote add <span class="org-string">"$reponame"</span> <span class="org-string">"$repourl"</span>
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>handle-remote</label><pre class="src src-shell" id="orgf018888">git remote add <span class="org-string">"$reponame"</span> <span class="org-string">"$repourl"</span>
 git fetch --tags --atomic <span class="org-string">"$reponame"</span>
 &lt;&lt;namespace-remote-tags&gt;&gt;
 <span class="org-sh-heredoc">&lt;&lt;list-branches&gt;&gt; | while read branch ; do</span>
@@ -718,18 +718,18 @@ git fetch --tags --atomic <span class="org-string">"$reponame"</span>
 </pre>
 </div>
 <p>
-References: <a href="#org254d112">namespace-remote-tags</a>, <a href="#org1c9c6a9">list-branches</a>, <a href="#orgfd1cb9d">handle-branch</a>
+References: <a href="#org0df2db7">namespace-remote-tags</a>, <a href="#org69a662f">list-branches</a>, <a href="#orgdc5fbf6">handle-branch</a>
 </p>
 
 <p>
-Used by: <a href="#orga303d06">top-level</a>
+Used by: <a href="#org74171e8">top-level</a>
 </p>
 </div>
 </div>
 
 
-<div id="outline-container-org1d53ea7" class="outline-3">
-<h3 id="org1d53ea7"><span class="section-number-3">4.2.</span> Per branch (this is where the magic happens)</h3>
+<div id="outline-container-orgc25c8e1" class="outline-3">
+<h3 id="orgc25c8e1"><span class="section-number-3">4.2.</span> Per branch (this is where the magic happens)</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 In the context of <i>a single repository check-out</i>, every branch is independently checked out into a subdir for that repository, and merged into the monorepo.
@@ -740,7 +740,7 @@ This is the money shot.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>handle-branch</label><pre class="src src-sh" id="orgfd1cb9d">&lt;&lt;ensure-on-target-branch-in-monorepo&gt;&gt;
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>handle-branch</label><pre class="src src-shell" id="orgdc5fbf6">&lt;&lt;ensure-on-target-branch-in-monorepo&gt;&gt;
 mkdir -p <span class="org-string">"$repopath"</span>
 git merge --strategy=ours <span class="org-string">"$reponame/$branch"</span> --allow-unrelated-histories --no-commit --no-ff
 git --work-tree <span class="org-string">"./$repopath/"</span> checkout <span class="org-string">"$reponame/$branch"</span> -- .
@@ -749,28 +749,36 @@ git commit -m <span class="org-string">"Merge $reponame/$branch"</span> --allow-
 </pre>
 </div>
 <p>
-References: <a href="#orgc68aae5">ensure-on-target-branch-in-monorepo</a>
+References: <a href="#org6c3c1db">ensure-on-target-branch-in-monorepo</a>
 </p>
 
 <p>
-Used by: <a href="#org92fb079">handle-remote</a>
+Used by: <a href="#orgf018888">handle-remote</a>
+</p>
+
+
+<p>
+N.B.: We check out the full tree every time, and commit it. There is probably some high-tech git trick we could pull to do this in cache only, without actually touching the filesystem, but I’ve found this method to be reliable and “fast enough.” It’s actually doggone slow, but hopefully you only migrate to a monorepo once in your entire life, so amortised it ends up being a wash.
+</p>
+
+<p>
+That being said, mercy on your soul if you try to migrate the linux kernel.
 </p>
 </div>
 
-
-<div id="outline-container-org46e3d80" class="outline-4">
-<h4 id="org46e3d80"><span class="section-number-4">4.2.1.</span> Ensure we are on the right branch</h4>
+<div id="outline-container-org739e56f" class="outline-4">
+<h4 id="org739e56f"><span class="section-number-4">4.2.1.</span> Ensure we are on the right branch</h4>
 <div class="outline-text-4" id="text-4-2-1">
-<p>
-We are given the variable <code>$branch</code> which is the final name of the branch we want to operate on. It is the same as the name of the branch in each individual target repo.
-</p>
-
 <p>
 In this snippet, we ensure that we are ready to merge fresh code from a subrepo into this branch: either we checkout an existing branch in the monorepo by this name, or we create a fresh one.
 </p>
 
+<p>
+We are given the variable <code>$branch</code> which is the final name of the branch we want to operate on. It is the same as the name of the branch in each individual target repo.
+</p>
+
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>ensure-on-target-branch-in-monorepo</label><pre class="src src-sh" id="orgc68aae5"><span class="org-keyword">if</span> git checkout --orphan <span class="org-string">"$branch"</span>; <span class="org-keyword">then</span>
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>ensure-on-target-branch-in-monorepo</label><pre class="src src-shell" id="org6c3c1db"><span class="org-keyword">if</span> git checkout --orphan <span class="org-string">"$branch"</span>; <span class="org-keyword">then</span>
     git rm -rf --cached . || :
     git clean -dfx
     git commit --allow-empty -m <span class="org-string">"root commit for monorepo branch $branch"</span>
@@ -780,7 +788,7 @@ In this snippet, we ensure that we are ready to merge fresh code from a subrepo 
 </pre>
 </div>
 <p>
-Used by: <a href="#orgfd1cb9d">handle-branch</a>
+Used by: <a href="#orgdc5fbf6">handle-branch</a>
 </p>
 
 
@@ -793,7 +801,7 @@ Neat side effect of <code>git checkout --orphan</code>: if the branch already ex
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ cd <span class="org-string">"$(mktemp -d)"</span>
+<pre class="src src-shell">$ cd <span class="org-string">"$(mktemp -d)"</span>
 
 $ git init
 ...
@@ -837,15 +845,15 @@ Ah well. Don&rsquo;t start your branch names with <code>-</code>, I guess?
 </div>
 </div>
 
-<div id="outline-container-org92ab5fc" class="outline-3">
-<h3 id="org92ab5fc"><span class="section-number-3">4.3.</span> Set up the monorepo directory</h3>
+<div id="outline-container-org4d25672" class="outline-3">
+<h3 id="org4d25672"><span class="section-number-3">4.3.</span> Set up the monorepo directory</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 We create a fresh directory for this script to run in, or continue on an existing one if the <code>--continue</code> flag is passed.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>prep-dir</label><pre class="src src-sh" id="org2048206"><span class="org-comment-delimiter"># </span><span class="org-comment">Poor man&#8217;s arg parse :/</span>
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>prep-dir</label><pre class="src src-shell" id="orgc0f7d75"><span class="org-comment-delimiter"># </span><span class="org-comment">Poor man&#8217;s arg parse :/</span>
 <span class="org-variable-name">arg</span>=<span class="org-string">"${1-}"</span>
 : <span class="org-string">"${MONOREPO_NAME:=core}"</span>
 
@@ -874,11 +882,11 @@ We create a fresh directory for this script to run in, or continue on an existin
 </pre>
 </div>
 <p>
-References: <a href="#org50adbe9">prep-tags</a>
+References: <a href="#orgf8fb676">prep-tags</a>
 </p>
 
 <p>
-Used by: <a href="#orga303d06">top-level</a>
+Used by: <a href="#org74171e8">top-level</a>
 </p>
 
 
@@ -892,25 +900,25 @@ It’s horrible and kludgy but I just want to get something working out the door
 </div>
 </div>
 
-<div id="outline-container-org1cf61d6" class="outline-3">
-<h3 id="org1cf61d6"><span class="section-number-3">4.4.</span> List individual branches</h3>
+<div id="outline-container-org0f1c7c4" class="outline-3">
+<h3 id="org0f1c7c4"><span class="section-number-3">4.4.</span> List individual branches</h3>
 <div class="outline-text-3" id="text-4-4">
 <p>
 I want a single branch name per line on stdout, for a single specific remote:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>list-branches</label><pre class="src src-sh" id="org1c9c6a9">git branch -r --no-color --list <span class="org-string">"$reponame/*"</span> --format <span class="org-string">"%(refname:lstrip=3)"</span>
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>list-branches</label><pre class="src src-shell" id="org69a662f">git branch -r --no-color --list <span class="org-string">"$reponame/*"</span> --format <span class="org-string">"%(refname:lstrip=3)"</span>
 </pre>
 </div>
 <p>
-Used by: <a href="#org92fb079">handle-remote</a>
+Used by: <a href="#orgf018888">handle-remote</a>
 </p>
 </div>
 
 
-<div id="outline-container-orgac5300b" class="outline-4">
-<h4 id="orgac5300b"><span class="section-number-4">4.4.1.</span> Implementations that didn’t make the cut</h4>
+<div id="outline-container-orga32d62b" class="outline-4">
+<h4 id="orga32d62b"><span class="section-number-4">4.4.1.</span> Implementations that didn’t make the cut</h4>
 <div class="outline-text-4" id="text-4-4-1">
 <p>
 Solutions I abandoned, due to one short-coming or another:
@@ -918,14 +926,14 @@ Solutions I abandoned, due to one short-coming or another:
 </div>
 
 <ol class="org-ol">
-<li><a id="orgf1c389e"></a><code>git branch -r</code> with grep<br>
+<li><a id="org78e2ab4"></a><code>git branch -r</code> with grep<br>
 <div class="outline-text-5" id="text-4-4-1-1">
 <p>
 The most straight-forward way to list branch names:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">$ git branch -r
+<pre class="src src-shell">$ git branch -r
   bar/branch-a
   bar/branch-b
   bar/master
@@ -940,10 +948,10 @@ This could be combined with <code>grep</code> to filter all branches for a speci
 </div>
 </li>
 
-<li><a id="orgce93e7b"></a><code>find .git/refs/hooks</code><br>
+<li><a id="org1e81199"></a><code>find .git/refs/hooks</code><br>
 <div class="outline-text-5" id="text-4-4-1-2">
 <div class="org-src-container">
-<pre class="src src-sh">( <span class="org-builtin">cd</span> <span class="org-string">".git/refs/remotes/$reponame"</span> &amp;&amp; find . -type f -mindepth 1 | sed -e s/..// )
+<pre class="src src-shell">( <span class="org-builtin">cd</span> <span class="org-string">".git/refs/remotes/$reponame"</span> &amp;&amp; find . -type f -mindepth 1 | sed -e s/..// )
 </pre>
 </div>
 
@@ -953,10 +961,10 @@ Closer, but ugly, and I got reports that it missed some branches (although I was
 </div>
 </li>
 
-<li><a id="orgb6e1605"></a><code>git ls-remote</code><br>
+<li><a id="orge5303cb"></a><code>git ls-remote</code><br>
 <div class="outline-text-5" id="text-4-4-1-3">
 <div class="org-src-container">
-<pre class="src src-sh">git ls-remote --heads --refs <span class="org-string">"$reponame"</span> | sed <span class="org-string">'s_[^ ]* *refs/heads/__'</span>
+<pre class="src src-shell">git ls-remote --heads --refs <span class="org-string">"$reponame"</span> | sed <span class="org-string">'s_[^ ]* *refs/heads/__'</span>
 </pre>
 </div>
 
@@ -969,8 +977,8 @@ Originally suggested in a <a href="https://github.com/hraban/tomono/pull/39">PR 
 </div>
 </div>
 
-<div id="outline-container-orgd660636" class="outline-3">
-<h3 id="orgd660636"><span class="section-number-3">4.5.</span> Tags</h3>
+<div id="outline-container-org71551ff" class="outline-3">
+<h3 id="org71551ff"><span class="section-number-3">4.5.</span> Tags</h3>
 <div class="outline-text-3" id="text-4-5">
 <p>
 Light weight tags are just refs, and they’re all stored in a predictable place in the <code>.git</code> directory. The easiest way to manage them is to juggle that directory after each fetch.
@@ -981,14 +989,14 @@ We start by storing all our existing tags somewhere out of git’s reach:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>prep-tags</label><pre class="src src-sh" id="org50adbe9">(
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>prep-tags</label><pre class="src src-shell" id="orgf8fb676">(
         <span class="org-builtin">cd</span> .git/refs
         mv tags tags-aux
 )
 </pre>
 </div>
 <p>
-Used by: <a href="#org2048206">prep-dir</a>
+Used by: <a href="#orgc0f7d75">prep-dir</a>
 </p>
 
 
@@ -997,39 +1005,46 @@ and once everything is done, we move them back:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>finalize</label><pre class="src src-sh" id="orgcb0b9e8">(
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>finalize</label><pre class="src src-shell" id="orga255988">(
         <span class="org-builtin">cd</span> .git/refs
         mv tags-aux tags
 )
 </pre>
 </div>
 <p>
-Used by: <a href="#orga303d06">top-level</a>
+Used by: <a href="#org74171e8">top-level</a>
 </p>
 
 
 <p>
-The real magic happens just after a remote has been fetched (see <a href="#org92fb079">2</a>). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
+The real magic happens just after a remote has been fetched (see <a href="#orgf018888">2</a>). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>namespace-remote-tags</label><pre class="src src-sh" id="org254d112">(
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>namespace-remote-tags</label><pre class="src src-shell" id="org0df2db7">(
         <span class="org-builtin">cd</span> .git/refs
         <span class="org-keyword">if</span> [[ -d tags ]]; <span class="org-keyword">then</span>
-                mv tags <span class="org-string">"tags-aux/$reponame"</span>
+                <span class="org-variable-name">tagdir</span>=<span class="org-string">"tags-aux/$reponame"</span>
+                mkdir -p <span class="org-string">"$tagdir"</span>
+                rmdir <span class="org-string">"$tagdir"</span>
+                mv tags <span class="org-string">"$tagdir"</span>
         <span class="org-keyword">fi</span>
 )
 </pre>
 </div>
 <p>
-Used by: <a href="#org92fb079">handle-remote</a>
+Used by: <a href="#orgf018888">handle-remote</a>
+</p>
+
+
+<p>
+The <code>mkdir -p .. ; rmdir ..</code> trick is the easiest way to create a directory’s parent, without creating the directory itself. I don’t like process substitution (<code>mkdir "$(dirname ...)"</code>, yuck).
 </p>
 </div>
 </div>
 
-
-<div id="outline-container-org319835f" class="outline-3">
-<h3 id="org319835f"><span class="section-number-3">4.6.</span> Error flags, warnings, debug</h3>
+<div id="outline-container-orgc426b7a" class="outline-3">
+<h3 id="orgc426b7a"><span class="section-number-3">4.6.</span> Error flags, warnings, debug</h3>
 <div class="outline-text-3" id="text-4-6">
 <p>
 Various sh flags allow us to control the behaviour of the shell: treat
@@ -1041,19 +1056,19 @@ every command before it gets executed.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>set-flags</label><pre class="src src-sh" id="org6e00639"><span class="org-builtin">set</span> -euo pipefail ${<span class="org-variable-name">DEBUGSH</span>+-x}
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>set-flags</label><pre class="src src-shell" id="orge34ab69"><span class="org-builtin">set</span> -euo pipefail ${<span class="org-variable-name">DEBUGSH</span>+-x}
 </pre>
 </div>
 <p>
-Used by: <a href="#orga303d06">top-level</a>
+Used by: <a href="#org74171e8">top-level</a>
 </p>
 </div>
 </div>
 </div>
 
 
-<div id="outline-container-org3c9659f" class="outline-2">
-<h2 id="org3c9659f"><span class="section-number-2">5.</span> Copyright and license</h2>
+<div id="outline-container-org38cd8c4" class="outline-2">
+<h2 id="org38cd8c4"><span class="section-number-2">5.</span> Copyright and license</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start.
@@ -1064,7 +1079,7 @@ The license and copyright attribution of this entire document can now be set:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 11: </span>copyright</label><pre class="src src-fundamental" id="orgdf86eaa">Copyright &#169; 2020, 2022 Hraban Luyat
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>copyright</label><pre class="src src-fundamental" id="orga5d6f4a">Copyright &#169; 2020, 2022 Hraban Luyat
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -1080,7 +1095,7 @@ along with this program.  If not, see <a href="https://www.gnu.org/licenses/">&l
 </pre>
 </div>
 <p>
-Used by: <a href="#orga303d06">top-level</a>
+Used by: <a href="#org74171e8">top-level</a>
 </p>
 
 
@@ -1091,7 +1106,7 @@ I did not look at the original implementation at all while developing this.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2022-06-22 Wed 06:00</p>
+<p class="date">Created: 2022-06-22 Wed 08:32</p>
 <p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 28.1 (<a href="https://orgmode.org">Org</a> mode 9.5.2)</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
