@@ -144,33 +144,34 @@ EOF
 This will create a new directory, =core=, where you can find a git tree which looks somewhat like this:
 
 #+begin_example
-,*   0803699 Merge bar/master (HEAD -> master)
+,*   Merge foo/branch-a (branch-a)
 |\
-,* \   6745370 Merge foo/master
+| * foo’s feature branch A (foo/branch-a)
+,* |   Merge bar/branch-a
 |\ \
-,* | | 9f1d472 root commit for monorepo branch master
+| * | bar’s feature branch A (bar/branch-a)
+,* | | Root commit for monorepo branch branch-a
  / /
-| | *   c943466 Merge bar/branch-a (branch-a)
+| | *   Merge foo/master (HEAD -> master)
 | | |\
-| | | * 798a6ca bar’s feature branch A (bar/branch-a)
 | | |/
 | |/|
-| | *   5ad4187 Merge foo/branch-a
-| | |\
-| | | * b783ebb foo’s feature branch A (foo/branch-a)
-| |_|/
-|/| |
-,* | | 66d94bb foo’s master (foo/master)
- / /
-| * 74077da root commit for monorepo branch branch-a
-| *   d8bc902 Merge bar/branch-b (branch-b)
+| * | foo’s master (foo/master)
+| * | foo’s empty root
+|  /
+| *   Merge bar/master
 | |\
-| | * ab40020 bar’s feature branch B (bar/branch-b)
 | |/
 |/|
-,* | 4a9a874 bar’s master (bar/master)
+| * Root commit for monorepo branch master
+| *   Merge bar/branch-b (branch-b)
+| |\
+| | * bar’s feature branch B (bar/branch-b)
+| |/
+|/|
+,* | bar’s master (bar/master)
  /
-,* 2c48815 root commit for monorepo branch branch-b
+,* Root commit for monorepo branch branch-b
 #+end_example
 
 ** Pull in new changes from a remote
