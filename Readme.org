@@ -3,6 +3,12 @@
 #+AUTHOR:       Hraban Luyat
 #+EMAIL:        hraban@0brg.net
 #+PROPERTY:     header-args       :noweb no-export
+#+html_head:    <link rel=stylesheet href=./style.css>
+#+options: html-link-use-abs-url:nil html-postamble:auto html-preamble:t ':t
+#+options: html-scripts:t html-style:t html5-fancy:t tex:html creator:t date:t author:nil
+#+html_doctype: html5
+#+html_container: div
+#+html_head_extra: <meta name=color-scheme content="light dark">
 
 This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example]] for exactly how this works.
 
@@ -596,12 +602,12 @@ Here is code to build the exported HTML
 Also, TODO: #+PROPERTY:     header-args:shell :comments link
 #+END_COMMENT
 
-#+NAME: configure-org-mode-for-this-file
-#+BEGIN_SRC emacs-lisp :exports none :results none
+#+BEGIN_SRC emacs-lisp :exports none :results none :tangle export-html.el
 ;; This is configuration for org mode itself, not tomono src code. Don't export this.
 
-;; TODO: Don't define as global functions? How do you do this in EL?
+;; TODO: Clean this up. No globals etc.
 
+(require 'cl-lib)
 (require 'dash)
 (require 's)
 
@@ -686,7 +692,7 @@ Note this function trusts the input string has those delimiters"
 
 (defun fix-references (backend)
   "Append a references section to every noweb codeblock"
-  (destructuring-bind (forward-refs back-refs) (parse-blocks)
+  (cl-destructuring-bind (forward-refs back-refs) (parse-blocks)
     (org-babel-map-src-blocks nil
       (let ((info (org-babel-get-src-block-info full-block)))
         (when (should-reference info)
@@ -695,4 +701,8 @@ Note this function trusts the input string has those delimiters"
             (apply #'insert-references info (get-references name))))))))
 
 (add-hook 'org-export-before-parsing-hook 'fix-references nil t)
+
+;; The HTML output
+(let ((org-html-htmlize-output-type 'css))
+  (org-html-export-to-html))
 #+END_SRC

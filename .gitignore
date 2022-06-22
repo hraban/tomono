@@ -1,4 +1,5 @@
 # org export noise
 *.html
+export-html.el
 
-# don't ignore the tangled files though
+# Don't ignore the tomono script, it's easier for people to just download it
