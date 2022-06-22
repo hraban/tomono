@@ -43,7 +43,10 @@ while read repourl reponame repopath; do
     (
     	cd .git/refs
     	if [[ -d tags ]]; then
-    		mv tags "tags-aux/$reponame"
+    		tagdir="tags-aux/$reponame"
+    		mkdir -p "$tagdir"
+    		rmdir "$tagdir"
+    		mv tags "$tagdir"
     	fi
     )
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do

@@ -554,10 +554,15 @@ The real magic happens just after a remote has been fetched (see [[handle-remote
 (
 	cd .git/refs
 	if [[ -d tags ]]; then
-		mv tags "tags-aux/$reponame"
+		tagdir="tags-aux/$reponame"
+		mkdir -p "$tagdir"
+		rmdir "$tagdir"
+		mv tags "$tagdir"
 	fi
 )
 #+end_src
+
+The =mkdir -p .. ; rmdir ..= trick is the easiest way to create a directory’s parent, without creating the directory itself. I don’t like process substitution (=mkdir "$(dirname ...)"=, yuck).
 
 ** Error flags, warnings, debug
 
