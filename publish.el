@@ -1,7 +1,8 @@
 ;; Keep this file simple, just babel tangle and trampoline to that file.
 (require 'org)
 
-(setq vc-handled-backends nil)
+(setq vc-handled-backends nil
+      make-backup-files nil)
 (find-file "Readme.org")
 ;; The tomono script
 (org-babel-tangle)
