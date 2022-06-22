@@ -48,16 +48,17 @@ while read repourl reponame repopath; do
     )
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
         if git checkout --orphan "$branch"; then
-            git rm -rf . || :
+            git rm -rf --cached . || :
+            git clean -dfx
             git commit --allow-empty -m "root commit for monorepo branch $branch"
         else
             git checkout "$branch"
         fi
         mkdir -p "$repopath"
-        git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
+        git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
         git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
         git add -A
-        git commit -m "Merge $reponame/$branch"
+        git commit -m "Merge $reponame/$branch" --allow-empty
     done
 done
 

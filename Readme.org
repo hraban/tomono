@@ -96,6 +96,7 @@ mkdir foo
 (
     cd foo
     git init
+    git commit -m "foo’s empty root" --allow-empty
     echo "This is foo" > i-am-foo.txt
     git add -A
     git commit -m "foo’s master"
@@ -357,10 +358,10 @@ This is the money shot.
 #+BEGIN_SRC sh
 <<ensure-on-target-branch-in-monorepo>>
 mkdir -p "$repopath"
-git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit
+git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
 git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
 git add -A
-git commit -m "Merge $reponame/$branch"
+git commit -m "Merge $reponame/$branch" --allow-empty
 #+END_SRC
 
 *** Ensure we are on the right branch
@@ -373,7 +374,8 @@ In this snippet, we ensure that we are ready to merge fresh code from a subrepo 
 #+NAME: ensure-on-target-branch-in-monorepo
 #+BEGIN_SRC sh
 if git checkout --orphan "$branch"; then
-    git rm -rf . || :
+    git rm -rf --cached . || :
+    git clean -dfx
     git commit --allow-empty -m "root commit for monorepo branch $branch"
 else
     git checkout "$branch"
