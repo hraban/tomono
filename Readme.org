@@ -357,16 +357,13 @@ This is the money shot.
 #+NAME: handle-branch
 #+BEGIN_SRC shell
 <<ensure-on-target-branch-in-monorepo>>
-mkdir -p "$repopath"
+
 git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
-git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
-git add -A
+git read-tree --prefix "$repopath" "$reponame/$branch"
 git commit -m "Merge $reponame/$branch" --allow-empty
 #+END_SRC
 
-N.B.: We check out the full tree every time, and commit it. There is probably some high-tech git trick we could pull to do this in cache only, without actually touching the filesystem, but I’ve found this method to be reliable and “fast enough.” It’s actually doggone slow, but hopefully you only migrate to a monorepo once in your entire life, so amortised it ends up being a wash.
-
-That being said, mercy on your soul if you try to migrate the linux kernel.
+Source: [[https://git-scm.com/book/en/v2/Git-Internals-Git-Objects]]
 
 *** Ensure we are on the right branch
 
@@ -380,15 +377,15 @@ We are given the variable =$branch= which is the final name of the branch we wan
 if ! git show-ref --verify --quiet "refs/heads/$branch"; then
     git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
 fi
-# Redundant flags, but can never hurt
-git checkout --no-guess -f "$branch"
-# For good measure, although this should be a NOP
-git clean -dfx
+git symbolic-ref HEAD "refs/heads/$branch"
+git reset
 #+END_SRC
 
-Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit first, and use =git checkout= as per. This lets us leverage git checkout’s capabilities to manage the working tree.
+Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit first, and update the HEAD to it directly. This lets us stay entirely in the index without bothering with the work tree.
 
-See [[https://stackoverflow.com/q/9765453/4359699]].
+Sources:
+- [[https://stackoverflow.com/q/9765453/4359699]]
+- [[https://stackoverflow.com/a/6070417/4359699]]
 
 ** Set up the monorepo directory
 
@@ -489,8 +486,9 @@ We start by storing all our existing tags somewhere out of git’s reach:
 
 and once everything is done, we move them back:
 
-#+caption: finalize
-#+name: finalize
+
+#+caption: finalize-tags
+#+name: finalize-tags
 #+begin_src shell :references yes
 (
 	cd .git/refs
@@ -516,7 +514,7 @@ The real magic happens just after a remote has been fetched (see [[handle-remote
 
 The =mkdir -p .. ; rmdir ..= trick is the easiest way to create a directory’s parent, without creating the directory itself. I don’t like process substitution (=mkdir "$(dirname ...)"=, yuck).
 
-** Init
+** Init & finalize
 
 Initialization is what you’d expect from a shell script:
 
@@ -530,6 +528,16 @@ Initialization is what you’d expect from a shell script:
 <<prep-tags>>
 
 empty_tree="$(git hash-object -t tree /dev/null)"
+#+end_src
+
+On the other side, when done, clean up the tags and update the working tree to whatever the current branch is to avoid any confusion:
+
+#+caption: finalize
+#+name: finalize
+#+begin_src shell
+<<finalize-tags>>
+
+git checkout .
 #+end_src
 
 *** Error flags, warnings, debug

@@ -54,14 +54,11 @@ while read repourl reponame repopath; do
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
             git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
         fi
-        # Redundant flags, but can never hurt
-        git checkout --no-guess -f "$branch"
-        # For good measure, although this should be a NOP
-        git clean -dfx
-        mkdir -p "$repopath"
+        git symbolic-ref HEAD "refs/heads/$branch"
+        git reset
+        
         git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
-        git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
-        git add -A
+        git read-tree --prefix "$repopath" "$reponame/$branch"
         git commit -m "Merge $reponame/$branch" --allow-empty
     done
 done
@@ -70,6 +67,8 @@ done
 	cd .git/refs
 	mv tags-aux tags
 )
+
+git checkout .
 
 # Copyright © 2020, 2022 Hraban Luyat
 # 
