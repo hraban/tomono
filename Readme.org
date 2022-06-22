@@ -300,6 +300,10 @@ Be prepared to deal with any conflicts!
 
 * Implementation
 
+#+begin_quote
+(This section is best viewed at [[https://hraban.github.io/tomono/]], the GitHub Readme viewer misses some info)
+#+end_quote
+
 The outer program structure is a flat bash script which loops over every repo supplied over stdin:
 
 #+CAPTION: top-level
@@ -483,7 +487,7 @@ Solutions I abandoned, due to one short-coming or another:
 
 The most straight-forward way to list branch names:
 
-#+begin_src sh :eval never :export code :results none
+#+begin_src sh :eval never :exports code :results none
 $ git branch -r
   bar/branch-a
   bar/branch-b
