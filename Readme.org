@@ -15,6 +15,27 @@ This script merges multiple independent tiny repositories into a single "monorep
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
 
+#+begin_src sh :eval never :exports code
+$ cat my-repos.txt
+git@github.com:mycompany/my-repo-abc.git abc
+git@github.com:mycompany/my-repo-def.git def
+$ /path/to/tomono < my-repos.txt
+
+... noise noise noise
+
+$ cd core # your monorepo is here now
+#+end_src
+
+* Features
+
+- 🕙 Full history of all your prior repos is intact, no changes to checksums
+- #️⃣ Signatures of old repos stay valid
+- 🔁 Create the monorepo and keep pulling in changes from your minirepos later
+- 🔀 Pull in entire new repos as you go, no need to prepare the whole thing at once
+- 🉑 Branches with weird names (slashes, etc)
+- 👥 No conflicts between files with the same name
+- 📁 Every project gets its own subdirectory
+
 * Usage
 
 Run the =tomono= script with your config on stdin, in the following format:
@@ -29,17 +50,10 @@ git@github.com:mycompany/my-lib-zzz.git   zzz  lib/zzz
 Concrete example:
 
 #+begin_src sh :eval never :exports code
-$ cat my-repos.txt
-git@github.com:mycompany/my-repo-abc.git abc
-git@github.com:mycompany/my-repo-def.git def
-$ /path/to/tomono < my-repos.txt
-
-... noise noise noise
-
-$ cd core # your monorepo is here now
+$ cat my-repos.txt | /path/to/tomono
 #+end_src
 
-That should be all 🙂.
+That should be all ✅.
 
 ** Custom name for monorepo directory
 
@@ -66,25 +80,6 @@ Here’s how to pull in an entirely new set of repositories:
 #+end_src
 
 Make sure you have your environment set up exactly the same as above. Particularly, you must be in the parent dir of the monorepo.
-
-* Features
-
-- Full history of all your prior repos is intact, no changes to checksums
-- Signatures of old repos stay valid
-- Create the monorepo and keep pulling in changes from your minirepos later
-- Even pull in entire new repos as you go, no need to prepare the whole thing at once
-- Branches with weird names (slashes, etc)
-- All code automatically moved to its own subdirectory
-- No clashes between files with the same name
-
-TODO to bring this cleanroom reimplementation up to date with the old version:
-
-- [X] create fresh monorepo from imported files
-- [X] =MONOREPO_NAME=
-- [X] =--continue=
-- [X] namespaced tags
-- [X] folder names (third arg in stdin)
-- [ ] output relevant progress info and hide irrelevant output
 
 * Example
 
@@ -438,7 +433,7 @@ We create a fresh directory for this script to run in, or continue on an existin
 #+CAPTION: prep-dir
 #+NAME: prep-dir
 #+BEGIN_SRC sh
-# Poor man’s arg parse 🤷‍♀️
+# Poor man’s arg parse :/
 arg="${1-}"
 : "${MONOREPO_NAME:=core}"
 

@@ -2,7 +2,7 @@
 # [[file:Readme.org::top-level][top-level]]
 set -euo pipefail ${DEBUGSH+-x}
 
-# Poor man’s arg parse 🤷‍♀️
+# Poor man’s arg parse :/
 arg="${1-}"
 : "${MONOREPO_NAME:=core}"
 

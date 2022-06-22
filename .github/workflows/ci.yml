@@ -66,5 +66,5 @@ jobs:
         name: "Commit the HTML to gh-pages branch"
         run: |
           git add -A
-          git commit -m "Update gh-pages from ${{github.ref}}"
+          git commit -m "Update gh-pages from ${{github.ref}} @ ${{github.sha}}"
           git push origin gh-pages
