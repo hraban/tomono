@@ -11,7 +11,7 @@
 #+html_container: div
 #+html_head_extra: <meta name=color-scheme content="light dark">
 
-This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example]] for exactly how this works.
+This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[Example][Example]] for exactly how this works.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
 
@@ -227,6 +227,9 @@ mkdir zimlib
     echo "I am a new zim feature" > feature-a.txt
     git add -A
     git commit -m "zim’s feature branch A"
+    git checkout --orphan empty-branch
+    git rm --cached -r .
+    git commit -m "zim’s tricky empty orphan branch" --allow-empty
 )
 #+end_src
 
@@ -310,10 +313,7 @@ The outer program structure is a flat bash script which loops over every repo su
 #+CAPTION: top-level
 #+NAME: top-level
 #+BEGIN_SRC shell :tangle tomono :shebang "#!/usr/bin/env bash" :references yes
-
-<<set-flags>>
-
-<<prep-dir>>
+<<init>>
 
 # Note this is top-level in the script so it’s reading from the script’s stdin
 while read repourl reponame repopath; do
@@ -338,7 +338,7 @@ Every repository is fetched and fully handled individually, and sequentially:
 
 #+CAPTION: handle-remote
 #+NAME: handle-remote
-#+BEGIN_SRC shell :references yeye
+#+BEGIN_SRC shell :references yes
   git remote add "$reponame" "$repourl"
   git fetch --tags --atomic "$reponame"
   <<namespace-remote-tags>>
@@ -377,64 +377,18 @@ We are given the variable =$branch= which is the final name of the branch we wan
 #+CAPTION: ensure-on-target-branch-in-monorepo
 #+NAME: ensure-on-target-branch-in-monorepo
 #+BEGIN_SRC shell
-if git checkout --orphan "$branch"; then
-    git rm -rf --cached . || :
-    git clean -dfx
-    git commit --allow-empty -m "root commit for monorepo branch $branch"
-else
-    git checkout "$branch"
+if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+    git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
 fi
+# Redundant flags, but can never hurt
+git checkout --no-guess -f "$branch"
+# For good measure, although this should be a NOP
+git clean -dfx
 #+END_SRC
 
-Technically; we do it the other way around :) First I try to create a fresh branch, and only if that fails, I switch to the existing one. This way I'm sure that a branch exists, so when I =git checkout "$branch"= , I don't clash with a filename, instead.
+Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit first, and use =git checkout= as per. This lets us leverage git checkout’s capabilities to manage the working tree.
 
-Neat side effect of =git checkout --orphan=: if the branch already exists, but has no commits at all on it, the operation succeeds as if the branch were freshly created. This helps us with the very first commit on =master=, which will have been automatically created as part of =git init=:
-
-#+begin_comment
-I'm sure there is a cooler way to do this, but I find my current options lacking. The HTML output is unreadable.
-
-E.g. the HTML export of this:
-
-#+begin_src shell :tangle no :results verbatim :exports both
-date
-#+end_src
-
-results in two completely separate blocks. This makes a interactive shell session with multiple individual commands hard to follow. Would be nice to have some sort of plugin for this.
-#+end_comment
-
-#+begin_src shell :tangle no :exports code
-$ cd "$(mktemp -d)"
-
-$ git init
-...
-
-$ git status
-On branch master
-...
-
-$ git checkout --orphan master
-Switched to a new branch 'master'
-$ echo $?
-0
-
-$ echo foo > bar ; git add bar ; git commit -m first
-...
-
-$ git checkout --orphan master
-fatal: A branch named 'master' already exists.
-$ echo $?
-128
-#+end_src
-
-As you can see, doing =git checkout --orphan= on master on a fresh repo is no problem. Otherwise we would have had to special case it.
-
-I'm sure this would still fail on some cases, e.g. branch names starting with a =-=. Ideally, I'd like a plumbing command to really just =git checkout-branch -- <branch-name>= no matter what. I'm sure the new =git switch= can help, but, quoth the man page:
-
-#+begin_src :tangle no
-THIS COMMAND IS EXPERIMENTAL. THE BEHAVIOR MAY CHANGE.
-#+end_src
-
-Ah well. Don't start your branch names with =-=, I guess?
+See [[https://stackoverflow.com/q/9765453/4359699]].
 
 ** Set up the monorepo directory
 
@@ -467,8 +421,6 @@ else
 	cd "$MONOREPO_NAME"
 	# There isn’t anything special about --continue, really.
 fi
-
-<<prep-tags>>
 #+END_SRC
 
 Most of rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
@@ -546,7 +498,7 @@ and once everything is done, we move them back:
 )
 #+end_src
 
-The real magic happens just after a remote has been fetched (see [[handle-remote]]). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
+The real magic happens just after a remote has been fetched (see [[handle-remote][=handle-remote=]]). We now know for sure that all tags actually only belong to that remote, so we can namespace them all together:
 
 #+caption: namespace-remote-tags
 #+name: namespace-remote-tags
@@ -564,7 +516,23 @@ The real magic happens just after a remote has been fetched (see [[handle-remote
 
 The =mkdir -p .. ; rmdir ..= trick is the easiest way to create a directory’s parent, without creating the directory itself. I don’t like process substitution (=mkdir "$(dirname ...)"=, yuck).
 
-** Error flags, warnings, debug
+** Init
+
+Initialization is what you’d expect from a shell script:
+
+#+caption: init
+#+name: init
+#+begin_src shell :references yes
+<<set-flags>>
+
+<<prep-dir>>
+
+<<prep-tags>>
+
+empty_tree="$(git hash-object -t tree /dev/null)"
+#+end_src
+
+*** Error flags, warnings, debug
 
 Various sh flags allow us to control the behaviour of the shell: treat
 any unknown variable reference as an error, treat any non-zero exit
@@ -591,7 +559,7 @@ Most of the code in this repository is generated from this readme file. This can
 
 This file can also be exported to HTML. Executing the block below, before you export it, adds some extra flourish to that exported file:
 
-#+BEGIN_SRC emacs-lisp :exports code :results none :tangle export-html.el
+#+BEGIN_SRC emacs-lisp :exports code :results none :tangle export-html.el :eval never-export
 ;; This is configuration for org mode itself, not tomono src code. Don't export this.
 
 ;; TODO: Clean this up. No globals etc.

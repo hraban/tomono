@@ -31,6 +31,8 @@ fi
 	mv tags tags-aux
 )
 
+empty_tree="$(git hash-object -t tree /dev/null)"
+
 # Note this is top-level in the script so it’s reading from the script’s stdin
 while read repourl reponame repopath; do
     if [[ -z "$repopath" ]]; then
@@ -49,13 +51,13 @@ while read repourl reponame repopath; do
     	fi
     )
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
-        if git checkout --orphan "$branch"; then
-            git rm -rf --cached . || :
-            git clean -dfx
-            git commit --allow-empty -m "root commit for monorepo branch $branch"
-        else
-            git checkout "$branch"
+        if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+            git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
         fi
+        # Redundant flags, but can never hurt
+        git checkout --no-guess -f "$branch"
+        # For good measure, although this should be a NOP
+        git clean -dfx
         mkdir -p "$repopath"
         git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
         git --work-tree "./$repopath/" checkout "$reponame/$branch" -- .
