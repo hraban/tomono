@@ -83,6 +83,40 @@ Here’s how to pull in an entirely new set of repositories:
 
 Make sure you have your environment set up exactly the same as above. Particularly, you must be in the parent dir of the monorepo.
 
+** Tags
+
+Tags are namespaced per remote, to avoid clashes. If your remote =foo= and =bar= both have a tag =v1.0.0=, your monorepo ends up with =foo/v1.0.0= and =bar/v1.0.0= pointing at their relevant commits.
+
+If you don’t like this rewriting, you can fetch all tags from a specific remote to the top-level of the monorepo:
+
+#+begin_src shell :eval never :export code :results none
+$ git fetch --tags foo
+#+end_src
+
+Be prepared to deal with any conflicts.
+
+*** Lightweight vs. Annotated Tags
+
+N.B.: This namespacing works for all tags: lightweight, annotated, signed. However, for the latter two, there is one snag: an annotated tag contains its own tag name as part of the commit. I have chosen not to modify the object itself, so the annotated tag object thinks it still has its old name. This is a mixed bag: it depends on your case whether that’s a feature or a bug. One major advantage of this approach is that signed tags remain valid. But you will occasionally get messages like:
+
+#+begin_example
+$ git describe linux/v5.9-rc4
+warning: tag 'linux/v5.9-rc4' is externally known as 'v5.9-rc4'
+v5.9-rc4-0-gf4d51dffc6c0
+#+end_example
+
+If you know what you’re doing, you can force update all signed and annotated tags to their (nested) ref tag name with the following snippet:
+
+#+begin_src shell :eval never :export code :results none
+git for-each-ref --format '%(objecttype) %(refname:lstrip=2)' | \
+    sed -ne 's/^tag //p' |
+    GIT_EDITOR=true xargs -I + -n 1 -- git tag -f -a + +^{}
+#+end_src
+
+N.B.: this will convert all signed tags to regular annotated tags (their signatures would fail anyway).
+
+Source: [[https://github.com/mwasilew2/tomono/commit/16aa7918aa9d912a30b563152bda62c77414cbe1][GitHub user mwasilew2]].
+
 * Example
 :PROPERTIES:
 :CUSTOM_ID: example
@@ -300,42 +334,6 @@ I am a new foo feature
 ==> lib/zim/feature-a.txt <==
 I am a new zim feature
 #+end_example
-
-** Tags
-
-Tags are namespaced per remote, to avoid clashes. If your remote =foo= and =bar= both have a tag =v1.0.0=, your monorepo ends up with =foo/v1.0.0= and =bar/v1.0.0= pointing at their relevant commits.
-
-If you don’t like this rewriting, you can fetch all tags from a specific remote to the top-level of the monorepo:
-
-#+begin_src shell :eval never :export code :results none
-$ git fetch --tags foo
-#+end_src
-
-Be prepared to deal with any conflicts.
-
-*** Lightweight vs. Annotated Tags
-
-N.B.: This namespacing works for all tags: lightweight, annotated, signed. However, for the latter two, there is one snag: an annotated tag contains its own tag name as part of the commit. I have chosen not to modify the object itself, so the annotated tag object thinks it still has its old name. This is a mixed bag: it depends on your case whether that’s a feature or a bug. One major advantage of this approach is that signed tags remain valid. But you will occasionally get messages like:
-
-#+begin_example
-$ git describe linux/v5.9-rc4
-warning: tag 'linux/v5.9-rc4' is externally known as 'v5.9-rc4'
-v5.9-rc4-0-gf4d51dffc6c0
-#+end_example
-
-If you know what you’re doing, you can force update all signed and annotated tags to their (nested) ref tag name with the following snippet:
-
-#+begin_src shell :eval never :export code :results none
-git for-each-ref --format '%(objecttype) %(refname:lstrip=2)' | \
-    grep ^tag | \
-    while read _ tag ; do
-        git tag -f -a "$tag" "$tag"^{}
-    done
-#+end_src
-
-N.B.: this will convert all signed tags to regular annotated tags (their signatures would fail anyway).
-
-Source: [[https://github.com/mwasilew2/tomono/commit/16aa7918aa9d912a30b563152bda62c77414cbe1][GitHub user mwasilew2]].
 
 * Implementation
 
