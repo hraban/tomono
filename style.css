@@ -5986,9 +5986,9 @@ pre.src:hover:before {
     display: none;
 }
 
-/* Don’t hide source code, just wrap it in its little box. */
-pre.src {
-    white-space: pre-wrap;
+pre {
+    /* Space is at a premium, and this is the most important content */
+    margin: 0;
 }
 
 img.max-inline {
