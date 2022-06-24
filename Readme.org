@@ -338,7 +338,7 @@ I am a new zim feature
 * Implementation
 
 #+begin_quote
-(This section is best viewed at [[https://hraban.github.io/tomono/]], the GitHub Readme viewer misses some info)
+(This section is best viewed at [[https://tomono.0brg.net/]], the GitHub Readme viewer misses some info)
 #+end_quote
 
 The outer program structure is a flat bash script which loops over every repo supplied over stdin:
