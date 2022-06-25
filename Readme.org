@@ -404,6 +404,8 @@ git commit -m "Merge $reponame/$branch" --allow-empty
 
 Source: [[https://git-scm.com/book/en/v2/Git-Internals-Git-Objects]]
 
+Technically, it’s not actually “checked out”: that implies changing the files in your work tree, i.e. on disk. Rather only the index is changed.
+
 *** Ensure we are on the right branch
 
 In this snippet, we ensure that we are ready to merge fresh code from a subrepo into this branch: either we checkout an existing branch in the monorepo by this name, or we create a fresh one.
@@ -425,6 +427,25 @@ Instead of using =git checkout --orphan= and trying to create a new empty commit
 Sources:
 - [[https://stackoverflow.com/q/9765453/4359699]]
 - [[https://stackoverflow.com/a/6070417/4359699]]
+
+*** Non-goal: merging into root
+
+GitHub user @woopla proposed in [[https://github.com/hraban/tomono/pull/42][#42]] the ability to merge a minirepo into the monorepo root, as if you used =.= as the subdirectory. We ended up not going for it, but it was interesting to investigate how to do this with =git read-tree=. The closest I got was:
+
+#+begin_src shell :eval never
+if [[ "$repopath" == "." ]]; then
+    # Experimental—is this how git read-tree works? I find it very confusing.
+    git read-tree "$branch" "$reponame/$branch"
+else
+    git read-tree --prefix "$repopath" "$reponame/$branch"
+fi
+#+end_src
+
+I must to confess I find the [[https://git-scm.com/docs/git-read-tree][git read-tree]] man page too daunting to fully stand by this. I mostly figured it out by trial and error. It seems to work?
+
+If anyone could explain to me exactly what this tool is supposed to do, what those separate stages are (it talks about “stage 0” to “stage 3” in its 3 way merge), and how you would cleanly do this, just for argument’s sake, I’d love to know.
+
+But, as it turned out, this tool already has a way to merge a repo into the root: just make it the monorepo, and use it as a target for a =--continue= operation. That solves that.
 
 ** Set up the monorepo directory
 
