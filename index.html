@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2022-06-24 Fri 23:07 -->
+<!-- 2022-07-27 Wed 07:39 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Multi- to Monorepo Migration</title>
@@ -222,49 +222,52 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org49bb547">1. Features</a></li>
-<li><a href="#org38152b8">2. Usage</a>
+<li><a href="#orga804755">1. Features</a></li>
+<li><a href="#org933346a">2. Usage</a>
 <ul>
-<li><a href="#org277ca75">2.1. Custom name for monorepo directory</a></li>
-<li><a href="#org34c2bd7">2.2. Custom “master” / “main” branch name</a></li>
-<li><a href="#orgb6b3b53">2.3. Continue existing migration</a></li>
-<li><a href="#org585cf68">2.4. Tags</a>
+<li><a href="#orgf2abd86">2.1. Custom name for monorepo directory</a></li>
+<li><a href="#org17071db">2.2. Custom “master” / “main” branch name</a></li>
+<li><a href="#orgf149754">2.3. Continue existing migration</a></li>
+<li><a href="#org2a9d164">2.4. Tags</a>
 <ul>
-<li><a href="#org0986701">2.4.1. Lightweight vs. Annotated Tags</a></li>
+<li><a href="#org193c2cd">2.4.1. Lightweight vs. Annotated Tags</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a href="#example">3. Example</a>
 <ul>
-<li><a href="#org6f3ec8a">3.1. Initial setup of fake repos</a></li>
-<li><a href="#org7a3f118">3.2. Combine into monorepo</a></li>
-<li><a href="#org98c20b6">3.3. Pull in new changes from a remote</a></li>
-<li><a href="#org4cb1f07">3.4. Continue</a></li>
+<li><a href="#org318c0b3">3.1. Initial setup of fake repos</a></li>
+<li><a href="#org85a30d8">3.2. Combine into monorepo</a></li>
+<li><a href="#orgd6ee311">3.3. Pull in new changes from a remote</a></li>
+<li><a href="#org3888bca">3.4. Continue</a></li>
 </ul>
 </li>
-<li><a href="#org995ae0d">4. Implementation</a>
+<li><a href="#org7e0e201">4. Implementation</a>
 <ul>
-<li><a href="#org2fad4f8">4.1. Per repository</a></li>
-<li><a href="#org8519a54">4.2. Per branch (this is where the magic happens)</a>
+<li><a href="#orgcc9e207">4.1. Per repository</a></li>
+<li><a href="#org9ad096f">4.2. Per branch (this is where the magic happens)</a>
 <ul>
-<li><a href="#org2a4ca41">4.2.1. Ensure we are on the right branch</a></li>
+<li><a href="#org3c9eb11">4.2.1. Ensure we are on the right branch</a></li>
+<li><a href="#orgbfe8950">4.2.2. Non-goal: merging into root</a></li>
 </ul>
 </li>
-<li><a href="#org7735817">4.3. Set up the monorepo directory</a></li>
-<li><a href="#orga4a34b5">4.4. List individual branches</a>
+<li><a href="#org42fe65a">4.3. Set up the monorepo directory</a></li>
+<li><a href="#org57b54ab">4.4. List individual branches</a>
 <ul>
-<li><a href="#orgdf1fc8e">4.4.1. Implementations that didn’t make the cut</a></li>
+<li><a href="#orgc8c8b4d">4.4.1. Implementations that didn’t make the cut</a></li>
 </ul>
 </li>
-<li><a href="#orgda7e627">4.5. Init &amp; finalize</a>
+<li><a href="#org9f5e935">4.5. Init &amp; finalize</a>
 <ul>
-<li><a href="#orgc39bc44">4.5.1. Error flags, warnings, debug</a></li>
+<li><a href="#org90bafcf">4.5.1. Error flags, warnings, debug</a></li>
+<li><a href="#orgbd4d47e">4.5.2. Windows newline fix</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgb50d68b">5. Copyright and license</a></li>
+<li><a href="#org6ed6b9d">5. Tests</a></li>
+<li><a href="#org9f8067f">6. Copyright and license</a></li>
 </ul>
 </div>
 </nav>
@@ -288,8 +291,8 @@ $ cd core <span class="org-comment-delimiter"># </span><span class="org-comment"
 </pre>
 </div>
 
-<div id="outline-container-org49bb547" class="outline-2">
-<h2 id="org49bb547"><span class="section-number-2">1.</span> Features</h2>
+<div id="outline-container-orga804755" class="outline-2">
+<h2 id="orga804755"><span class="section-number-2">1.</span> Features</h2>
 <div class="outline-text-2" id="text-1">
 <ul class="org-ul">
 <li>🕙 Full history of all your prior repos is intact, no changes to checksums</li>
@@ -304,14 +307,14 @@ $ cd core <span class="org-comment-delimiter"># </span><span class="org-comment"
 </div>
 </div>
 
-<div id="outline-container-org38152b8" class="outline-2">
-<h2 id="org38152b8"><span class="section-number-2">2.</span> Usage</h2>
+<div id="outline-container-org933346a" class="outline-2">
+<h2 id="org933346a"><span class="section-number-2">2.</span> Usage</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Run the <code>tomono</code> script with your config on stdin, in the following format:
 </p>
 
-<pre class="example" id="orgf9e51fe">
+<pre class="example" id="org8125411">
 $ cat my-repos.txt
 git@github.com:mycompany/my-repo-abc.git  abc
 git@github.com:mycompany/my-repo-def.git  def
@@ -333,8 +336,8 @@ That should be all ✅.
 </p>
 </div>
 
-<div id="outline-container-org277ca75" class="outline-3">
-<h3 id="org277ca75"><span class="section-number-3">2.1.</span> Custom name for monorepo directory</h3>
+<div id="outline-container-orgf2abd86" class="outline-3">
+<h3 id="orgf2abd86"><span class="section-number-3">2.1.</span> Custom name for monorepo directory</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 Don’t like <code>core</code>? Set a different name through an envvar before running the script:
@@ -347,8 +350,8 @@ Don’t like <code>core</code>? Set a different name through an envvar before ru
 </div>
 </div>
 
-<div id="outline-container-org34c2bd7" class="outline-3">
-<h3 id="org34c2bd7"><span class="section-number-3">2.2.</span> Custom “master” / “main” branch name</h3>
+<div id="outline-container-org17071db" class="outline-3">
+<h3 id="org17071db"><span class="section-number-3">2.2.</span> Custom “master” / “main” branch name</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 No need to do anything. This script does not handle any master / main branch in any special way. It just merges whatever branches exist. Don’t have a “master” branch? None will be created.
@@ -360,8 +363,8 @@ Make sure your own computer has the right branch set up in its <code>init.defaul
 </div>
 </div>
 
-<div id="outline-container-orgb6b3b53" class="outline-3">
-<h3 id="orgb6b3b53"><span class="section-number-3">2.3.</span> Continue existing migration</h3>
+<div id="outline-container-orgf149754" class="outline-3">
+<h3 id="orgf149754"><span class="section-number-3">2.3.</span> Continue existing migration</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 Large teams can’t afford to “stop the world” while a migration is in progress. You’ll be fixing stuff and pulling in new repositories as you go.
@@ -382,8 +385,8 @@ Make sure you have your environment set up exactly the same as above. Particular
 </div>
 </div>
 
-<div id="outline-container-org585cf68" class="outline-3">
-<h3 id="org585cf68"><span class="section-number-3">2.4.</span> Tags</h3>
+<div id="outline-container-org2a9d164" class="outline-3">
+<h3 id="org2a9d164"><span class="section-number-3">2.4.</span> Tags</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 Tags are namespaced per remote, to avoid clashes. If your remote <code>foo</code> and <code>bar</code> both have a tag <code>v1.0.0</code>, your monorepo ends up with <code>foo/v1.0.0</code> and <code>bar/v1.0.0</code> pointing at their relevant commits.
@@ -403,14 +406,14 @@ Be prepared to deal with any conflicts.
 </p>
 </div>
 
-<div id="outline-container-org0986701" class="outline-4">
-<h4 id="org0986701"><span class="section-number-4">2.4.1.</span> Lightweight vs. Annotated Tags</h4>
+<div id="outline-container-org193c2cd" class="outline-4">
+<h4 id="org193c2cd"><span class="section-number-4">2.4.1.</span> Lightweight vs. Annotated Tags</h4>
 <div class="outline-text-4" id="text-2-4-1">
 <p>
 N.B.: This namespacing works for all tags: lightweight, annotated, signed. However, for the latter two, there is one snag: an annotated tag contains its own tag name as part of the commit. I have chosen not to modify the object itself, so the annotated tag object thinks it still has its old name. This is a mixed bag: it depends on your case whether that’s a feature or a bug. One major advantage of this approach is that signed tags remain valid. But you will occasionally get messages like:
 </p>
 
-<pre class="example" id="org6348d5f">
+<pre class="example" id="orge8a6d3f">
 $ git describe linux/v5.9-rc4
 warning: tag 'linux/v5.9-rc4' is externally known as 'v5.9-rc4'
 v5.9-rc4-0-gf4d51dffc6c0
@@ -447,8 +450,8 @@ Run these commands to set up a fresh directory with git monorepos that you can l
 </p>
 </div>
 
-<div id="outline-container-org6f3ec8a" class="outline-3">
-<h3 id="org6f3ec8a"><span class="section-number-3">3.1.</span> Initial setup of fake repos</h3>
+<div id="outline-container-org318c0b3" class="outline-3">
+<h3 id="org318c0b3"><span class="section-number-3">3.1.</span> Initial setup of fake repos</h3>
 <div class="outline-text-3" id="text-3-1">
 <div class="org-src-container">
 <pre class="src src-shell"><span class="org-variable-name">d</span>=<span class="org-string">"$(mktemp -d)"</span>
@@ -502,8 +505,8 @@ You now have two directories:
 </div>
 </div>
 
-<div id="outline-container-org7a3f118" class="outline-3">
-<h3 id="org7a3f118"><span class="section-number-3">3.2.</span> Combine into monorepo</h3>
+<div id="outline-container-org85a30d8" class="outline-3">
+<h3 id="org85a30d8"><span class="section-number-3">3.2.</span> Combine into monorepo</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
 Assuming the <code>tomono</code> script is in your <code>$PATH</code>, you can invoke it like this, from that same directory:
@@ -521,7 +524,7 @@ Assuming the <code>tomono</code> script is in your <code>$PATH</code>, you can i
 This will create a new directory, <code>core</code>, where you can find a git tree which looks somewhat like this:
 </p>
 
-<pre class="example" id="org2ce928e">
+<pre class="example" id="orgb122fe6">
 *   Merge foo/branch-a (branch-a)
 |\
 | * foo’s feature branch A (foo/branch-a)
@@ -542,6 +545,7 @@ This will create a new directory, <code>core</code>, where you can find a git tr
 | |/
 |/|
 | * Root commit for monorepo branch master
+|
 | *   Merge bar/branch-b (branch-b)
 | |\
 | | * bar’s feature branch B (bar/branch-b)
@@ -554,8 +558,8 @@ This will create a new directory, <code>core</code>, where you can find a git tr
 </div>
 </div>
 
-<div id="outline-container-org98c20b6" class="outline-3">
-<h3 id="org98c20b6"><span class="section-number-3">3.3.</span> Pull in new changes from a remote</h3>
+<div id="outline-container-orgd6ee311" class="outline-3">
+<h3 id="orgd6ee311"><span class="section-number-3">3.3.</span> Pull in new changes from a remote</h3>
 <div class="outline-text-3" id="text-3-3">
 <p>
 It’s possible that while you’re working on setting up your fresh monorepo, new changes have been pushed to the existing single repos:
@@ -611,8 +615,8 @@ I used the branch master in this example, but any branch works the same way.
 </div>
 </div>
 
-<div id="outline-container-org4cb1f07" class="outline-3">
-<h3 id="org4cb1f07"><span class="section-number-3">3.4.</span> Continue</h3>
+<div id="outline-container-org3888bca" class="outline-3">
+<h3 id="org3888bca"><span class="section-number-3">3.4.</span> Continue</h3>
 <div class="outline-text-3" id="text-3-4">
 <p>
 Now imagine you want to pull in a third repository into the monorepo:
@@ -650,7 +654,7 @@ Continue importing it:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"$PWD/zimlib zim lib/zim"</span> | /path/to/tomono --continue
+<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"$PWD/zimlib zim lib/zim"</span> | tomono --continue
 </pre>
 </div>
 
@@ -662,7 +666,7 @@ Note that we used a different name for this subrepo, inside the <code>lib</code>
 The result is that it gets imported into the existing monorepo, alongside the existing two projects:
 </p>
 
-<pre class="example" id="orgf4f8934">
+<pre class="example" id="orge15a81d">
 $ cd core
 $ git checkout master
 Switched to branch 'master'
@@ -707,8 +711,8 @@ I am a new zim feature
 </div>
 </div>
 
-<div id="outline-container-org995ae0d" class="outline-2">
-<h2 id="org995ae0d"><span class="section-number-2">4.</span> Implementation</h2>
+<div id="outline-container-org7e0e201" class="outline-2">
+<h2 id="org7e0e201"><span class="section-number-2">4.</span> Implementation</h2>
 <div class="outline-text-2" id="text-4">
 <blockquote>
 <p>
@@ -721,15 +725,15 @@ The outer program structure is a flat bash script which loops over every repo su
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>top-level</label><pre class="src src-shell" id="org36a6282">&lt;&lt;init&gt;&gt;
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>top-level</label><pre class="src src-shell" id="org07ad957">&lt;&lt;init&gt;&gt;
 
 <span class="org-comment-delimiter"># </span><span class="org-comment">Note this is top-level in the script so it&#8217;s reading from the script&#8217;s stdin</span>
-<span class="org-keyword">while </span><span class="org-builtin">read</span> repourl reponame repopath; <span class="org-keyword">do</span>
-    <span class="org-keyword">if</span> [[ -z <span class="org-string">"$repopath"</span> ]]; <span class="org-keyword">then</span>
-        <span class="org-variable-name">repopath</span>=<span class="org-string">"$reponame"</span>
-    <span class="org-keyword">fi</span>
+<span class="org-keyword">while</span> &lt;&lt;windows-fix&gt;&gt; read repourl reponame repopath; <span class="org-keyword">do</span>
+<span class="org-sh-heredoc">    if [[ -z "$repopath" ]]; then</span>
+<span class="org-sh-heredoc">        repopath="$reponame"</span>
+<span class="org-sh-heredoc">    fi</span>
 
-    &lt;&lt;handle-remote&gt;&gt;
+<span class="org-sh-heredoc">    &lt;&lt;handle-remote&gt;&gt;</span>
 <span class="org-sh-heredoc">done</span>
 
 <span class="org-sh-heredoc">&lt;&lt;finalize&gt;&gt;</span>
@@ -738,13 +742,13 @@ The outer program structure is a flat bash script which loops over every repo su
 </pre>
 </div>
 <p>
-References: <a href="#org2d2c86d">init</a>, <a href="#orgdddf211">handle-remote</a>, <a href="#org4af535a">finalize</a>, <a href="#org2bc92d6">copyright</a>
+References: <a href="#org744211d">init</a>, <a href="#org96ae4b8">windows-fix</a>, <a href="#orga34fed6">handle-remote</a>, <a href="#org3d368c8">finalize</a>, <a href="#orgda2e1c2">copyright</a>
 </p>
 </div>
 
 
-<div id="outline-container-org2fad4f8" class="outline-3">
-<h3 id="org2fad4f8"><span class="section-number-3">4.1.</span> Per repository</h3>
+<div id="outline-container-orgcc9e207" class="outline-3">
+<h3 id="orgcc9e207"><span class="section-number-3">4.1.</span> Per repository</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 Every repository is fetched and fully handled individually, and sequentially:
@@ -756,7 +760,7 @@ Every repository is fetched and fully handled individually, and sequentially:
 </ol>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>handle-remote</label><pre class="src src-shell" id="orgdddf211">git remote add <span class="org-string">"$reponame"</span> <span class="org-string">"$repourl"</span>
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>handle-remote</label><pre class="src src-shell" id="orga34fed6">git remote add <span class="org-string">"$reponame"</span> <span class="org-string">"$repourl"</span>
 git config --add <span class="org-string">"remote.$reponame.fetch"</span> <span class="org-string">"+refs/tags/*:refs/tags/$reponame/*"</span>
 git config <span class="org-string">"remote.$reponame.tagOpt"</span> --no-tags
 git fetch --atomic <span class="org-string">"$reponame"</span>
@@ -767,11 +771,11 @@ git fetch --atomic <span class="org-string">"$reponame"</span>
 </pre>
 </div>
 <p>
-References: <a href="#orgc8a102f">list-branches</a>, <a href="#org304c1e7">handle-branch</a>
+References: <a href="#orge3a1513">list-branches</a>, <a href="#org56e7a4c">handle-branch</a>
 </p>
 
 <p>
-Used by: <a href="#org36a6282">top-level</a>
+Used by: <a href="#org07ad957">top-level</a>
 </p>
 
 
@@ -785,8 +789,8 @@ The <code>--no-tags</code> option is the complement to <code>--tags</code>, whic
 </div>
 </div>
 
-<div id="outline-container-org8519a54" class="outline-3">
-<h3 id="org8519a54"><span class="section-number-3">4.2.</span> Per branch (this is where the magic happens)</h3>
+<div id="outline-container-org9ad096f" class="outline-3">
+<h3 id="org9ad096f"><span class="section-number-3">4.2.</span> Per branch (this is where the magic happens)</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 In the context of <i>a single repository check-out</i>, every branch is independently checked out into a subdir for that repository, and merged into the monorepo.
@@ -797,7 +801,7 @@ This is the money shot.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>handle-branch</label><pre class="src src-shell" id="org304c1e7">&lt;&lt;ensure-on-target-branch-in-monorepo&gt;&gt;
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>handle-branch</label><pre class="src src-shell" id="org56e7a4c">&lt;&lt;ensure-on-target-branch-in-monorepo&gt;&gt;
 
 git merge --strategy=ours <span class="org-string">"$reponame/$branch"</span> --allow-unrelated-histories --no-commit --no-ff
 git read-tree --prefix <span class="org-string">"$repopath"</span> <span class="org-string">"$reponame/$branch"</span>
@@ -805,21 +809,25 @@ git commit -m <span class="org-string">"Merge $reponame/$branch"</span> --allow-
 </pre>
 </div>
 <p>
-References: <a href="#org34e2ee7">ensure-on-target-branch-in-monorepo</a>
+References: <a href="#org88e2e23">ensure-on-target-branch-in-monorepo</a>
 </p>
 
 <p>
-Used by: <a href="#orgdddf211">handle-remote</a>
+Used by: <a href="#orga34fed6">handle-remote</a>
 </p>
 
 
 <p>
 Source: <a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects">https://git-scm.com/book/en/v2/Git-Internals-Git-Objects</a>
 </p>
+
+<p>
+Technically, it’s not actually “checked out”: that implies changing the files in your work tree, i.e. on disk. Rather only the index is changed.
+</p>
 </div>
 
-<div id="outline-container-org2a4ca41" class="outline-4">
-<h4 id="org2a4ca41"><span class="section-number-4">4.2.1.</span> Ensure we are on the right branch</h4>
+<div id="outline-container-org3c9eb11" class="outline-4">
+<h4 id="org3c9eb11"><span class="section-number-4">4.2.1.</span> Ensure we are on the right branch</h4>
 <div class="outline-text-4" id="text-4-2-1">
 <p>
 In this snippet, we ensure that we are ready to merge fresh code from a subrepo into this branch: either we checkout an existing branch in the monorepo by this name, or we create a fresh one.
@@ -830,7 +838,7 @@ We are given the variable <code>$branch</code> which is the final name of the br
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>ensure-on-target-branch-in-monorepo</label><pre class="src src-shell" id="org34e2ee7"><span class="org-keyword">if</span> <span class="org-negation-char">!</span> git show-ref --verify --quiet <span class="org-string">"refs/heads/$branch"</span>; <span class="org-keyword">then</span>
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>ensure-on-target-branch-in-monorepo</label><pre class="src src-shell" id="org88e2e23"><span class="org-keyword">if</span> <span class="org-negation-char">!</span> git show-ref --verify --quiet <span class="org-string">"refs/heads/$branch"</span>; <span class="org-keyword">then</span>
     git branch -- <span class="org-string">"$branch"</span> <span class="org-string">"$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"</span>
 <span class="org-keyword">fi</span>
 git symbolic-ref HEAD <span class="org-string">"refs/heads/$branch"</span>
@@ -838,7 +846,7 @@ git reset
 </pre>
 </div>
 <p>
-Used by: <a href="#org304c1e7">handle-branch</a>
+Used by: <a href="#org56e7a4c">handle-branch</a>
 </p>
 
 
@@ -855,17 +863,48 @@ Sources:
 </ul>
 </div>
 </div>
+
+<div id="outline-container-orgbfe8950" class="outline-4">
+<h4 id="orgbfe8950"><span class="section-number-4">4.2.2.</span> Non-goal: merging into root</h4>
+<div class="outline-text-4" id="text-4-2-2">
+<p>
+GitHub user @woopla proposed in <a href="https://github.com/hraban/tomono/pull/42">#42</a> the ability to merge a minirepo into the monorepo root, as if you used <code>.</code> as the subdirectory. We ended up not going for it, but it was interesting to investigate how to do this with <code>git read-tree</code>. The closest I got was:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-keyword">if</span> [[ <span class="org-string">"$repopath"</span> == <span class="org-string">"."</span> ]]; <span class="org-keyword">then</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">Experimental&#8212;is this how git read-tree works? I find it very confusing.</span>
+    git read-tree <span class="org-string">"$branch"</span> <span class="org-string">"$reponame/$branch"</span>
+<span class="org-keyword">else</span>
+    git read-tree --prefix <span class="org-string">"$repopath"</span> <span class="org-string">"$reponame/$branch"</span>
+<span class="org-keyword">fi</span>
+</pre>
 </div>
 
-<div id="outline-container-org7735817" class="outline-3">
-<h3 id="org7735817"><span class="section-number-3">4.3.</span> Set up the monorepo directory</h3>
+<p>
+I must to confess I find the <a href="https://git-scm.com/docs/git-read-tree">git read-tree</a> man page too daunting to fully stand by this. I mostly figured it out by trial and error. It seems to work?
+</p>
+
+<p>
+If anyone could explain to me exactly what this tool is supposed to do, what those separate stages are (it talks about “stage 0” to “stage 3” in its 3 way merge), and how you would cleanly do this, just for argument’s sake, I’d love to know.
+</p>
+
+<p>
+But, as it turned out, this tool already has a way to merge a repo into the root: just make it the monorepo, and use it as a target for a <code>--continue</code> operation. That solves that.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org42fe65a" class="outline-3">
+<h3 id="org42fe65a"><span class="section-number-3">4.3.</span> Set up the monorepo directory</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 We create a fresh directory for this script to run in, or continue on an existing one if the <code>--continue</code> flag is passed.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>prep-dir</label><pre class="src src-shell" id="org15bdd42"><span class="org-comment-delimiter"># </span><span class="org-comment">Poor man&#8217;s arg parse :/</span>
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>prep-dir</label><pre class="src src-shell" id="orgb322818"><span class="org-comment-delimiter"># </span><span class="org-comment">Poor man&#8217;s arg parse :/</span>
 <span class="org-variable-name">arg</span>=<span class="org-string">"${1-}"</span>
 : <span class="org-string">"${MONOREPO_NAME:=core}"</span>
 
@@ -896,7 +935,7 @@ We create a fresh directory for this script to run in, or continue on an existin
 </pre>
 </div>
 <p>
-Used by: <a href="#org2d2c86d">init</a>
+Used by: <a href="#org744211d">init</a>
 </p>
 
 
@@ -910,25 +949,25 @@ It’s horrible and kludgy but I just want to get something working out the door
 </div>
 </div>
 
-<div id="outline-container-orga4a34b5" class="outline-3">
-<h3 id="orga4a34b5"><span class="section-number-3">4.4.</span> List individual branches</h3>
+<div id="outline-container-org57b54ab" class="outline-3">
+<h3 id="org57b54ab"><span class="section-number-3">4.4.</span> List individual branches</h3>
 <div class="outline-text-3" id="text-4-4">
 <p>
 I want a single branch name per line on stdout, for a single specific remote:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>list-branches</label><pre class="src src-shell" id="orgc8a102f">git branch -r --no-color --list <span class="org-string">"$reponame/*"</span> --format <span class="org-string">"%(refname:lstrip=3)"</span>
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>list-branches</label><pre class="src src-shell" id="orge3a1513">git branch -r --no-color --list <span class="org-string">"$reponame/*"</span> --format <span class="org-string">"%(refname:lstrip=3)"</span>
 </pre>
 </div>
 <p>
-Used by: <a href="#orgdddf211">handle-remote</a>
+Used by: <a href="#orga34fed6">handle-remote</a>
 </p>
 </div>
 
 
-<div id="outline-container-orgdf1fc8e" class="outline-4">
-<h4 id="orgdf1fc8e"><span class="section-number-4">4.4.1.</span> Implementations that didn’t make the cut</h4>
+<div id="outline-container-orgc8c8b4d" class="outline-4">
+<h4 id="orgc8c8b4d"><span class="section-number-4">4.4.1.</span> Implementations that didn’t make the cut</h4>
 <div class="outline-text-4" id="text-4-4-1">
 <p>
 Solutions I abandoned, due to one short-coming or another:
@@ -936,7 +975,7 @@ Solutions I abandoned, due to one short-coming or another:
 </div>
 
 <ol class="org-ol">
-<li><a id="orga15d669"></a><code>git branch -r</code> with grep<br>
+<li><a id="org88cc2f8"></a><code>git branch -r</code> with grep<br>
 <div class="outline-text-5" id="text-4-4-1-1">
 <p>
 The most straight-forward way to list branch names:
@@ -958,7 +997,7 @@ This could be combined with <code>grep</code> to filter all branches for a speci
 </div>
 </li>
 
-<li><a id="orgba75c4c"></a><code>find .git/refs/hooks</code><br>
+<li><a id="org46e4dd0"></a><code>find .git/refs/hooks</code><br>
 <div class="outline-text-5" id="text-4-4-1-2">
 <div class="org-src-container">
 <pre class="src src-shell">( <span class="org-builtin">cd</span> <span class="org-string">".git/refs/remotes/$reponame"</span> &amp;&amp; find . -type f -mindepth 1 | sed -e s/..// )
@@ -971,7 +1010,7 @@ Closer, but ugly, and I got reports that it missed some branches (although I was
 </div>
 </li>
 
-<li><a id="org3745989"></a><code>git ls-remote</code><br>
+<li><a id="org24669bd"></a><code>git ls-remote</code><br>
 <div class="outline-text-5" id="text-4-4-1-3">
 <div class="org-src-container">
 <pre class="src src-shell">git ls-remote --heads --refs <span class="org-string">"$reponame"</span> | sed <span class="org-string">'s_[^ ]* *refs/heads/__'</span>
@@ -987,15 +1026,15 @@ Originally suggested in a <a href="https://github.com/hraban/tomono/pull/39">PR 
 </div>
 </div>
 
-<div id="outline-container-orgda7e627" class="outline-3">
-<h3 id="orgda7e627"><span class="section-number-3">4.5.</span> Init &amp; finalize</h3>
+<div id="outline-container-org9f5e935" class="outline-3">
+<h3 id="org9f5e935"><span class="section-number-3">4.5.</span> Init &amp; finalize</h3>
 <div class="outline-text-3" id="text-4-5">
 <p>
 Initialization is what you’d expect from a shell script:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>init</label><pre class="src src-shell" id="org2d2c86d">&lt;&lt;set-flags&gt;&gt;
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>init</label><pre class="src src-shell" id="org744211d">&lt;&lt;set-flags&gt;&gt;
 
 &lt;&lt;prep-dir&gt;&gt;
 
@@ -1003,11 +1042,11 @@ Initialization is what you’d expect from a shell script:
 </pre>
 </div>
 <p>
-References: <a href="#org5138ab8">set-flags</a>, <a href="#org15bdd42">prep-dir</a>
+References: <a href="#org4717ee2">set-flags</a>, <a href="#orgb322818">prep-dir</a>
 </p>
 
 <p>
-Used by: <a href="#org36a6282">top-level</a>
+Used by: <a href="#org07ad957">top-level</a>
 </p>
 
 
@@ -1016,17 +1055,17 @@ On the other side, when done, update the working tree to whatever the current br
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>finalize</label><pre class="src src-shell" id="org4af535a">git checkout .
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>finalize</label><pre class="src src-shell" id="org3d368c8">git checkout .
 </pre>
 </div>
 <p>
-Used by: <a href="#org36a6282">top-level</a>
+Used by: <a href="#org07ad957">top-level</a>
 </p>
 </div>
 
 
-<div id="outline-container-orgc39bc44" class="outline-4">
-<h4 id="orgc39bc44"><span class="section-number-4">4.5.1.</span> Error flags, warnings, debug</h4>
+<div id="outline-container-org90bafcf" class="outline-4">
+<h4 id="org90bafcf"><span class="section-number-4">4.5.1.</span> Error flags, warnings, debug</h4>
 <div class="outline-text-4" id="text-4-5-1">
 <p>
 Various sh flags allow us to control the behaviour of the shell: treat
@@ -1038,21 +1077,241 @@ every command before it gets executed.
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>set-flags</label><pre class="src src-shell" id="org5138ab8"><span class="org-builtin">set</span> -euo pipefail ${<span class="org-variable-name">DEBUGSH</span>+-x}
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>set-flags</label><pre class="src src-shell" id="org4717ee2"><span class="org-builtin">set</span> -euo pipefail ${<span class="org-variable-name">DEBUGSH</span>+-x}
 </pre>
 </div>
 <p>
-Used by: <a href="#org2d2c86d">init</a>
+Used by: <a href="#org744211d">init</a>
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgbd4d47e" class="outline-4">
+<h4 id="orgbd4d47e"><span class="section-number-4">4.5.2.</span> Windows newline fix</h4>
+<div class="outline-text-4" id="text-4-5-2">
+<p>
+On Windows the config file could contain windows newline endings (CRLF). Bash doesn’t handle those as proper field separators. Even on Windows&#x2026;
+</p>
+
+<p>
+We force it by adding CR as a field separator:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="org96ae4b8"><span class="org-variable-name">IFS</span>=$<span class="org-string">'\r'"$IFS"</span>
+</pre>
+</div>
+<p>
+Used by: <a href="#org07ad957">top-level</a>
+</p>
+
+
+<p>
+It can’t hurt to do this on other computers, because who has a carriage return in their repo name or path? Nobody does.
+</p>
+
+<p>
+The real question is: why is this not standard in Bash for Windows? Who knows. I’d add it to my .bashrc if I were you 🤷‍♀️.
 </p>
 </div>
 </div>
 </div>
 </div>
 
-
-<div id="outline-container-orgb50d68b" class="outline-2">
-<h2 id="orgb50d68b"><span class="section-number-2">5.</span> Copyright and license</h2>
+<div id="outline-container-org6ed6b9d" class="outline-2">
+<h2 id="org6ed6b9d"><span class="section-number-2">5.</span> Tests</h2>
 <div class="outline-text-2" id="text-5">
+<p>
+The examples can be combined into a test script:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="org2edd0c6"><span class="org-builtin">set</span> -xeuo pipefail
+shopt -s globstar
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">The tomono script is tangled right next to the test script</span>
+<span class="org-builtin">export</span> <span class="org-variable-name">PATH</span>=<span class="org-string">"$PWD:$PATH"</span>
+
+<span class="org-variable-name">d</span>=<span class="org-string">"$(mktemp -d)"</span>
+<span class="org-builtin">echo</span> <span class="org-string">"Setting up fresh multi-repos in $d"</span>
+<span class="org-builtin">cd</span> <span class="org-string">"$d"</span>
+
+mkdir foo
+(
+    <span class="org-builtin">cd</span> foo
+    git init
+    git commit -m <span class="org-string">"foo&#8217;s empty root"</span> --allow-empty
+    <span class="org-builtin">echo</span> <span class="org-string">"This is foo"</span> &gt; i-am-foo.txt
+    git add -A
+    git commit -m <span class="org-string">"foo&#8217;s master"</span>
+    git tag v1.0
+    git checkout -b branch-a
+    <span class="org-builtin">echo</span> <span class="org-string">"I am a new foo feature"</span> &gt; feature-a.txt
+    git add -A
+    git commit -m <span class="org-string">"foo&#8217;s feature branch A"</span>
+)
+
+mkdir bar
+(
+    <span class="org-builtin">cd</span> bar
+    git init
+    <span class="org-builtin">echo</span> <span class="org-string">"This is bar"</span> &gt; i-am-bar.txt
+    git add -A
+    git commit -m <span class="org-string">"bar&#8217;s master"</span>
+    git tag v1.0
+    git checkout -b branch-a
+    <span class="org-builtin">echo</span> <span class="org-string">"I am bar&#8217;s side of feature A"</span> &gt; feature-a.txt
+    git add -A
+    git commit -m <span class="org-string">"bar&#8217;s feature branch A"</span>
+    git branch branch-b master
+    git checkout branch-b
+    <span class="org-builtin">echo</span> <span class="org-string">"I am an entirely new feature of bar: B"</span> &gt; feature-b.txt
+    git add -A
+    git commit -m <span class="org-string">"bar&#8217;s feature branch B"</span>
+)
+mkdir zimlib
+(
+    <span class="org-builtin">cd</span> zimlib
+    git init
+    <span class="org-builtin">echo</span> <span class="org-string">"This is zim"</span> &gt; i-am-zim.txt
+    git add -A
+    git commit -m <span class="org-string">"zim&#8217;s master"</span>
+    git checkout -b branch-a
+    <span class="org-builtin">echo</span> <span class="org-string">"I am a new zim feature"</span> &gt; feature-a.txt
+    git add -A
+    git commit -m <span class="org-string">"zim&#8217;s feature branch A"</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">And some more weird stuff, to mess with you</span>
+    git checkout master
+    git checkout -d
+    <span class="org-builtin">echo</span> top secret &gt; james-bond.txt
+    git add -A
+    git commit -m <span class="org-string">"I am unreachable"</span>
+    git tag leaking-you HEAD
+    git checkout --orphan empty-branch
+    git rm --cached -r .
+    git clean -dfx
+    git commit -m <span class="org-string">"zim&#8217;s tricky empty orphan branch"</span> --allow-empty
+)
+tomono &lt;&lt;EOF
+<span class="org-sh-heredoc">$PWD/foo foo</span>
+<span class="org-sh-heredoc">$PWD/bar bar</span>
+<span class="org-sh-heredoc">EOF</span>
+<span class="org-builtin">echo</span> <span class="org-string">"$PWD/zimlib zim lib/zim"</span> | tomono --continue
+<span class="org-builtin">cd</span> core
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking branch list"</span>
+diff -u &lt;(git branch --no-color --list --format <span class="org-string">"%(refname:lstrip=2)"</span> | sort) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">branch-a</span>
+<span class="org-sh-heredoc">branch-b</span>
+<span class="org-sh-heredoc">empty-branch</span>
+<span class="org-sh-heredoc">master</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking master"</span>
+git checkout master
+diff -u &lt;(head **/*.*) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">==&gt; bar/i-am-bar.txt &lt;==</span>
+<span class="org-sh-heredoc">This is bar</span>
+
+<span class="org-sh-heredoc">==&gt; foo/i-am-foo.txt &lt;==</span>
+<span class="org-sh-heredoc">This is foo</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/i-am-zim.txt &lt;==</span>
+<span class="org-sh-heredoc">This is zim</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking branch-a"</span>
+git checkout branch-a
+diff -u &lt;(head **/*.*) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">==&gt; bar/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am bar&#8217;s side of feature A</span>
+
+<span class="org-sh-heredoc">==&gt; bar/i-am-bar.txt &lt;==</span>
+<span class="org-sh-heredoc">This is bar</span>
+
+<span class="org-sh-heredoc">==&gt; foo/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am a new foo feature</span>
+
+<span class="org-sh-heredoc">==&gt; foo/i-am-foo.txt &lt;==</span>
+<span class="org-sh-heredoc">This is foo</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am a new zim feature</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/i-am-zim.txt &lt;==</span>
+<span class="org-sh-heredoc">This is zim</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+</pre>
+</div>
+
+<p>
+All we need is to write the code that actually evaluates the tests and fixtures:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="orge73f23a"><span class="org-builtin">cd</span> core
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking branch list"</span>
+diff -u &lt;(git branch --no-color --list --format <span class="org-string">"%(refname:lstrip=2)"</span> | sort) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">branch-a</span>
+<span class="org-sh-heredoc">branch-b</span>
+<span class="org-sh-heredoc">empty-branch</span>
+<span class="org-sh-heredoc">master</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking master"</span>
+git checkout master
+diff -u &lt;(head **/*.*) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">==&gt; bar/i-am-bar.txt &lt;==</span>
+<span class="org-sh-heredoc">This is bar</span>
+
+<span class="org-sh-heredoc">==&gt; foo/i-am-foo.txt &lt;==</span>
+<span class="org-sh-heredoc">This is foo</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/i-am-zim.txt &lt;==</span>
+<span class="org-sh-heredoc">This is zim</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+
+<span class="org-builtin">echo</span> <span class="org-string">"Checking branch-a"</span>
+git checkout branch-a
+diff -u &lt;(head **/*.*) &lt;(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">==&gt; bar/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am bar&#8217;s side of feature A</span>
+
+<span class="org-sh-heredoc">==&gt; bar/i-am-bar.txt &lt;==</span>
+<span class="org-sh-heredoc">This is bar</span>
+
+<span class="org-sh-heredoc">==&gt; foo/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am a new foo feature</span>
+
+<span class="org-sh-heredoc">==&gt; foo/i-am-foo.txt &lt;==</span>
+<span class="org-sh-heredoc">This is foo</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/feature-a.txt &lt;==</span>
+<span class="org-sh-heredoc">I am a new zim feature</span>
+
+<span class="org-sh-heredoc">==&gt; lib/zim/i-am-zim.txt &lt;==</span>
+<span class="org-sh-heredoc">This is zim</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+</pre>
+</div>
+
+<p>
+I use that weird <code>diff -u &lt;(..)</code> trick instead of a string compare like <code>[[ "foo" =</code> &ldquo;&#x2026;&rdquo; ]]=, because the diff shows you where the problem is, instead of just failing the test without comment.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9f8067f" class="outline-2">
+<h2 id="org9f8067f"><span class="section-number-2">6.</span> Copyright and license</h2>
+<div class="outline-text-2" id="text-6">
 <p>
 This is a cleanroom reimplementation of the tomono.sh script, originally written with copyright assigned to Ravelin Ltd., a UK fraud detection company. There were some questions around licensing, and it was unclear how to go forward with maintenance of this project given its dispersed copyright, so I went ahead and rewrote the entire thing for a fresh start.
 </p>
@@ -1062,7 +1321,7 @@ The license and copyright attribution of this entire document can now be set:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>copyright</label><pre class="src src-fundamental" id="org2bc92d6">Copyright &#169; 2020, 2022 Hraban Luyat
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>copyright</label><pre class="src src-fundamental" id="orgda2e1c2">Copyright &#169; 2020, 2022 Hraban Luyat
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -1078,7 +1337,7 @@ along with this program.  If not, see <a href="https://www.gnu.org/licenses/">&l
 </pre>
 </div>
 <p>
-Used by: <a href="#org36a6282">top-level</a>
+Used by: <a href="#org07ad957">top-level</a>
 </p>
 
 
@@ -1089,7 +1348,7 @@ I did not look at the original implementation at all while developing this.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2022-06-24 Fri 23:07</p>
+<p class="date">Created: 2022-07-27 Wed 07:39</p>
 <p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 28.1 (<a href="https://orgmode.org">Org</a> mode 9.5.2)</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
