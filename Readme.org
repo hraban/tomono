@@ -10,6 +10,7 @@
 #+html_doctype: html5
 #+html_container: div
 #+html_head_extra: <meta name=color-scheme content="light dark">
+#+BIND: org-html-validation-link: nil
 
 This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[#example][Example]] for exactly how this works.
 
