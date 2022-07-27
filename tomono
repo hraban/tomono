@@ -33,7 +33,7 @@ fi
 empty_tree="$(git hash-object -t tree /dev/null)"
 
 # Note this is top-level in the script so it’s reading from the script’s stdin
-while read repourl reponame repopath; do
+while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     if [[ -z "$repopath" ]]; then
         repopath="$reponame"
     fi

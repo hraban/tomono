@@ -351,7 +351,7 @@ The outer program structure is a flat bash script which loops over every repo su
 <<init>>
 
 # Note this is top-level in the script so it’s reading from the script’s stdin
-while read repourl reponame repopath; do
+while <<windows-fix>> read repourl reponame repopath; do
     if [[ -z "$repopath" ]]; then
         repopath="$reponame"
     fi
@@ -571,6 +571,21 @@ every command before it gets executed.
 #+BEGIN_SRC shell
 set -euo pipefail ${DEBUGSH+-x}
 #+END_SRC
+
+*** Windows newline fix
+
+On Windows the config file could contain windows newline endings (CRLF). Bash doesn’t handle those as proper field separators. Even on Windows...
+
+We force it by adding CR as a field separator:
+
+#+name: windows-fix
+#+begin_src shell
+IFS=$'\r'"$IFS"
+#+end_src
+
+It can’t hurt to do this on other computers, because who has a carriage return in their repo name or path? Nobody does.
+
+The real question is: why is this not standard in Bash for Windows? Who knows. I’d add it to my .bashrc if I were you 🤷‍♀️.
 
 * Building the code                                                :noexport:
 
