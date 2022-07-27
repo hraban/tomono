@@ -206,6 +206,7 @@ This will create a new directory, =core=, where you can find a git tree which lo
 | |/
 |/|
 | * Root commit for monorepo branch master
+|
 | *   Merge bar/branch-b (branch-b)
 | |\
 | | * bar’s feature branch B (bar/branch-b)
