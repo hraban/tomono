@@ -90,13 +90,15 @@ jobs:
         with:
           ref: gh-pages
       - name: Remove files before artifact download
-        run: rm -rf artifacts.tar
+        run: rm -f artifacts.tar
       -
         uses: actions/download-artifact@v3
         with:
           name: bundle-${{github.sha}}
       - name: Unpack artifacts
-        run: tar xvf artifacts.tar
+        run: |
+          tar xvf artifacts.tar index.html
+          rm -f artifacts.tar
       -
         name: configure git
         run: |
