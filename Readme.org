@@ -127,7 +127,7 @@ Run these commands to set up a fresh directory with git monorepos that you can l
 
 ** Initial setup of fake repos
 
-#+begin_src shell :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-setup
 d="$(mktemp -d)"
 echo "Setting up fresh multi-repos in $d"
 cd "$d"
@@ -176,7 +176,7 @@ You now have two directories:
 
 Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, from that same directory:
 
-#+begin_src shell :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-run
 tomono <<EOF
 $PWD/foo foo
 $PWD/bar bar
@@ -259,7 +259,7 @@ I used the branch master in this example, but any branch works the same way.
 
 Now imagine you want to pull in a third repository into the monorepo:
 
-#+begin_src shell :exports code :eval never-export :results none
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-setup
 mkdir zimlib
 (
     cd zimlib
@@ -287,8 +287,8 @@ mkdir zimlib
 
 Continue importing it:
 
-#+begin_src shell :exports code :eval never-export :results none
-echo "$PWD/zimlib zim lib/zim" | /path/to/tomono --continue
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-run
+echo "$PWD/zimlib zim lib/zim" | tomono --continue
 #+end_src
 
 Note that we used a different name for this subrepo, inside the =lib= dir.
@@ -688,6 +688,78 @@ Note this function trusts the input string has those delimiters"
 (let ((org-html-htmlize-output-type 'css))
   (org-html-export-to-html))
 #+END_SRC
+
+* Tests
+
+The examples can be combined into a test script:
+
+#+name: test
+#+BEGIN_SRC shell :tangle test :shebang "#!/usr/bin/env bash" :noweb yes :references yes
+set -xeuo pipefail
+shopt -s globstar
+
+# The tomono script is tangled right next to the test script
+export PATH="$PWD:$PATH"
+
+<<test-setup>>
+<<test-run>>
+<<test-evaluate>>
+#+END_SRC
+
+All we need is to write the code that actually evaluates the tests and fixtures:
+
+#+name: test-evaluate
+#+begin_src shell :exports code :results none :eval never-export :references yes
+cd core
+
+echo "Checking branch list"
+diff -u <(git branch --no-color --list --format "%(refname:lstrip=2)" | sort) <(cat <<EOF
+branch-a
+branch-b
+empty-branch
+master
+EOF
+)
+
+echo "Checking master"
+git checkout master
+diff -u <(head **/*.*) <(cat <<EOF
+==> bar/i-am-bar.txt <==
+This is bar
+
+==> foo/i-am-foo.txt <==
+This is foo
+
+==> lib/zim/i-am-zim.txt <==
+This is zim
+EOF
+)
+
+echo "Checking branch-a"
+git checkout branch-a
+diff -u <(head **/*.*) <(cat <<EOF
+==> bar/feature-a.txt <==
+I am bar’s side of feature A
+
+==> bar/i-am-bar.txt <==
+This is bar
+
+==> foo/feature-a.txt <==
+I am a new foo feature
+
+==> foo/i-am-foo.txt <==
+This is foo
+
+==> lib/zim/feature-a.txt <==
+I am a new zim feature
+
+==> lib/zim/i-am-zim.txt <==
+This is zim
+EOF
+)
+#+end_src
+
+I use that weird =diff -u <(..)= trick instead of a string compare like =[[ "foo" == "..." ]]=, because the diff shows you where the problem is, instead of just failing the test without comment.
 
 * Copyright and license
 

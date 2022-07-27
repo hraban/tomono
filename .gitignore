@@ -1,5 +1,6 @@
 # org export noise
 *.html
 export-html.el
+test
 
 # Don't ignore the tomono script, it's easier for people to just download it

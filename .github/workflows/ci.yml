@@ -9,6 +9,11 @@ name: "CI/CD"
 env:
   DOCKER_BUILDKIT: 1
 
+defaults:
+  run:
+    # For the windows phase
+    shell: bash
+
 jobs:
 
   build:
@@ -34,10 +39,43 @@ jobs:
         name: Tangle code and export HTML
         run: docker-compose run --rm build
       -
+        name: Create artifact bundle
+        run: tar cvf artifacts.tar test tomono index.html
+      -
         uses: actions/upload-artifact@v3
         with:
-          name: index-html-${{github.sha}}
-          path: index.html
+          name: bundle-${{github.sha}}
+          path: artifacts.tar
+
+  test:
+    timeout-minutes: 10
+    name: "Test"
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    needs: build
+    steps:
+      -
+        name: Remove files before artifact download
+        run: rm -rf artifacts.tar
+      -
+        uses: actions/download-artifact@v3
+        with:
+          name: bundle-${{github.sha}}
+      -
+        name: Unpack artifacts
+        run: tar xvf artifacts.tar
+      -
+        name: Set up git for CI
+        run: |
+          git config --global user.name CI
+          git config --global user.email c@i
+          git config --global init.defaultBranch master
+          git config --global core.autocrlf input
+      -
+        name: Run tests
+        run: ./test
 
   deploy_pages:
     timeout-minutes: 10
@@ -52,11 +90,13 @@ jobs:
         with:
           ref: gh-pages
       - name: Remove files before artifact download
-        run: rm -rf index.html
+        run: rm -rf artifacts.tar
       -
         uses: actions/download-artifact@v3
         with:
-          name: index-html-${{github.sha}}
+          name: bundle-${{github.sha}}
+      - name: Unpack artifacts
+        run: tar xvf artifacts.tar
       -
         name: configure git
         run: |
