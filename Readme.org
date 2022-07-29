@@ -12,20 +12,9 @@
 #+html_head_extra: <meta name=color-scheme content="light dark">
 #+BIND: org-html-validation-link: nil
 
-This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[#example][Example]] for exactly how this works.
+This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[#example][Example]] for the details.
 
 Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
-
-#+begin_src shell :eval never :exports code
-$ cat my-repos.txt
-git@github.com:mycompany/my-repo-abc.git abc
-git@github.com:mycompany/my-repo-def.git def
-$ /path/to/tomono < my-repos.txt
-
-... noise noise noise
-
-$ cd core # your monorepo is here now
-#+end_src
 
 * Features
 
@@ -57,6 +46,10 @@ $ cat my-repos.txt | /path/to/tomono
 #+end_src
 
 That should be all ✅.
+
+#+begin_comment
+Yes #uselessuseofcat but it is clearer than < > ! # $) &&*!&♨±⌘︎ to newbies.
+#+end_comment
 
 ** Custom name for monorepo directory
 
