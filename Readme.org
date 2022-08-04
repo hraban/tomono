@@ -12,9 +12,9 @@
 #+html_head_extra: <meta name=color-scheme content="light dark">
 #+BIND: org-html-validation-link: nil
 
-This script merges multiple independent tiny repositories into a single "monorepo". The summary is “every repo is moved into its own subdirectory, branches are merged.” See [[#example][Example]] for the details.
+This script merges multiple independent tiny repositories into a single "monorepo". Every original repo is moved into its own subdirectory, branches with the same name are all merged. See [[#example][Example]] for the details.
 
-Further reading: https://syslog.ravelin.com/multi-to-mono-repository-c81d004df3ce
+Download the =tomono= script on [[https://github.com/hraban/tomono][github.com/hraban/tomono]].
 
 * Features
 
@@ -715,10 +715,14 @@ export PATH="$PWD:$PATH"
 <<test-evaluate>>
 #+END_SRC
 
-All we need is to write the code that actually evaluates the tests and fixtures:
+#+begin_comment
+I’ve chosen to export the fully tangled script to HTML export and hide the separate test implementation below, because I think it makes more sense as a single large script.
+#+end_comment
+
+All we needed to write was the code that actually evaluates the tests and fixtures.
 
 #+name: test-evaluate
-#+begin_src shell :exports code :results none :eval never-export :references yes
+#+begin_src shell :exports none :results none :eval never-export :references yes
 cd core
 
 echo "Checking branch list"
@@ -768,7 +772,7 @@ EOF
 )
 #+end_src
 
-I use that weird =diff -u <(..)= trick instead of a string compare like =[[ "foo" == "..." ]]=, because the diff shows you where the problem is, instead of just failing the test without comment.
+I use that weird =diff -u <(..)= trick instead of a string compare like ~[[ "foo" == "..." ]]~ , because the diff shows you where the problem is, instead of just failing the test without comment.
 
 * Copyright and license
 
