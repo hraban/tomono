@@ -344,7 +344,7 @@ The outer program structure is a flat bash script which loops over every repo su
 <<init>>
 
 # Note this is top-level in the script so it’s reading from the script’s stdin
-while <<windows-fix>> read repourl reponame repopath; do
+while <<windows-fix>> read -r repourl reponame repopath; do
     if [[ -z "$repopath" ]]; then
         repopath="$reponame"
     fi
@@ -372,7 +372,7 @@ git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
 git config "remote.$reponame.tagOpt" --no-tags
 git fetch --atomic "$reponame"
 
-<<list-branches>> | while read branch ; do
+<<list-branches>> | while read -r branch ; do
     <<handle-branch>>
 done
 #+END_SRC

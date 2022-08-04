@@ -43,7 +43,7 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     git config "remote.$reponame.tagOpt" --no-tags
     git fetch --atomic "$reponame"
     
-    git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read branch ; do
+    git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
             git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
         fi
