@@ -571,6 +571,7 @@ On Windows the config file could contain windows newline endings (CRLF). Bash do
 
 We force it by adding CR as a field separator:
 
+#+caption: windows-fix
 #+name: windows-fix
 #+begin_src shell
 IFS=$'\r'"$IFS"
