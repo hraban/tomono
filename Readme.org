@@ -331,9 +331,12 @@ I am a new zim feature
 #+end_example
 
 * Implementation
+:PROPERTIES:
+:CUSTOM_ID: implementation
+:END:
 
 #+begin_quote
-(This section is best viewed at [[https://tomono.0brg.net/]], the GitHub Readme viewer misses some info)
+(This section is best viewed in [[https://tomono.0brg.net/#implementation][HTML form]]; the GitHub Readme viewer misses some info.)
 #+end_quote
 
 The outer program structure is a flat bash script which loops over every repo supplied over stdin:
@@ -699,8 +702,15 @@ Note this function trusts the input string has those delimiters"
 #+END_SRC
 
 * Tests
+:PROPERTIES:
+:CUSTOM_ID: tests
+:END:
 
-The examples can be combined into a test script:
+#+begin_quote
+(This section is best viewed in [[https://tomono.0brg.net/#tests][HTML form]]; the GitHub Readme viewer misses some info.)
+#+end_quote
+
+The examples from this document can be combined into a test script:
 
 #+name: test
 #+BEGIN_SRC shell :tangle test :shebang "#!/usr/bin/env bash" :noweb yes :references yes
