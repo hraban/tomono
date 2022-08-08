@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail ${DEBUGSH+-x}
+shopt -s inherit_errexit
 
 # Poor man’s arg parse :/
 arg="${1-}"
@@ -45,14 +46,22 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-            git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
+        	tree="$(git commit-tree \
+        		"$empty_tree" \
+        		-m "Root commit for monorepo branch $branch")"
+        	git branch -- "$branch" "$tree"
         fi
         git symbolic-ref HEAD "refs/heads/$branch"
         git reset
         
-        git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
         git read-tree --prefix "$repopath" "$reponame/$branch"
-        git commit -m "Merge $reponame/$branch" --allow-empty
+        tree="$(git write-tree)"
+        commit="$(git commit-tree \
+        	"$tree" \
+        	-p "$branch" \
+        	-p "$reponame/$branch" \
+        	-m "Merge $reponame/$branch")"
+        git reset "$commit"
     done
 done
 

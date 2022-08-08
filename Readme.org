@@ -386,7 +386,7 @@ The =--no-tags= option is the complement to =--tags=, which has that default ref
 
 ** Per branch (this is where the magic happens)
 
-In the context of /a single repository check-out/, every branch is independently checked out into a subdir for that repository, and merged into the monorepo.
+In the context of /a single repository,/ every branch is independently read into a subdirectory for that repository, and merged into the monorepo.
 
 This is the money shot.
 
@@ -395,14 +395,17 @@ This is the money shot.
 #+BEGIN_SRC shell
 <<ensure-on-target-branch-in-monorepo>>
 
-git merge --strategy=ours "$reponame/$branch" --allow-unrelated-histories --no-commit --no-ff
 git read-tree --prefix "$repopath" "$reponame/$branch"
-git commit -m "Merge $reponame/$branch" --allow-empty
+tree="$(git write-tree)"
+commit="$(git commit-tree \
+	"$tree" \
+	-p "$branch" \
+	-p "$reponame/$branch" \
+	-m "Merge $reponame/$branch")"
+git reset "$commit"
 #+END_SRC
 
 Source: [[https://git-scm.com/book/en/v2/Git-Internals-Git-Objects]]
-
-Technically, it’s not actually “checked out”: that implies changing the files in your work tree, i.e. on disk. Rather only the index is changed.
 
 *** Ensure we are on the right branch
 
@@ -414,17 +417,22 @@ We are given the variable =$branch= which is the final name of the branch we wan
 #+NAME: ensure-on-target-branch-in-monorepo
 #+BEGIN_SRC shell
 if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-    git branch -- "$branch" "$(printf "Root commit for monorepo branch %s" "$branch" | git commit-tree "$empty_tree")"
+	tree="$(git commit-tree \
+		"$empty_tree" \
+		-m "Root commit for monorepo branch $branch")"
+	git branch -- "$branch" "$tree"
 fi
 git symbolic-ref HEAD "refs/heads/$branch"
 git reset
 #+END_SRC
 
-Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit first, and update the HEAD to it directly. This lets us stay entirely in the index without bothering with the work tree.
+Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit directly and point the new branch to it. Then, we read the branch, new or existing, into the index. Now we have the current index representing the branch, and HEAD pointing at the branch. This allows us to stay in the index and avoid the worktree.
+
+Working with HEAD feels odd, and it requires using =git reset= to update the branch, rather than =git branch -f ...=, because the branch is checked out. This is still more reliable than not pointing HEAD at the branch, because HEAD is always pointing at /some/ branch (e.g. “master”), so it is easier to just assume you’re /always/ pointing at the “current” branch.
 
 Sources:
-- [[https://stackoverflow.com/q/9765453/4359699]]
-- [[https://stackoverflow.com/a/6070417/4359699]]
+- [[https://stackoverflow.com/q/9765453]]
+- [[https://stackoverflow.com/a/6070417]]
 
 *** Non-goal: merging into root
 
@@ -566,6 +574,7 @@ every command before it gets executed.
 #+NAME: set-flags
 #+BEGIN_SRC shell
 set -euo pipefail ${DEBUGSH+-x}
+shopt -s inherit_errexit
 #+END_SRC
 
 *** Windows newline fix
@@ -716,6 +725,7 @@ The examples from this document can be combined into a test script:
 #+BEGIN_SRC shell :tangle test :shebang "#!/usr/bin/env bash" :noweb yes :references yes
 set -xeuo pipefail
 shopt -s globstar
+export DEBUGSH=true
 
 # The tomono script is tangled right next to the test script
 export PATH="$PWD:$PATH"
