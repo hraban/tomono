@@ -402,7 +402,7 @@ commit="$(git commit-tree \
 	-p "$branch" \
 	-p "$reponame/$branch" \
 	-m "Merge $reponame/$branch")"
-git reset "$commit"
+git reset -q "$commit"
 #+END_SRC
 
 Source: [[https://git-scm.com/book/en/v2/Git-Internals-Git-Objects]]
@@ -423,7 +423,7 @@ if ! git show-ref --verify --quiet "refs/heads/$branch"; then
 	git branch -- "$branch" "$tree"
 fi
 git symbolic-ref HEAD "refs/heads/$branch"
-git reset
+git reset -q
 #+END_SRC
 
 Instead of using =git checkout --orphan= and trying to create a new empty commit from the index, we create the empty commit directly and point the new branch to it. Then, we read the branch, new or existing, into the index. Now we have the current index representing the branch, and HEAD pointing at the branch. This allows us to stay in the index and avoid the worktree.

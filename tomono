@@ -52,7 +52,7 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
         	git branch -- "$branch" "$tree"
         fi
         git symbolic-ref HEAD "refs/heads/$branch"
-        git reset
+        git reset -q
         
         git read-tree --prefix "$repopath" "$reponame/$branch"
         tree="$(git write-tree)"
@@ -61,7 +61,7 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
         	-p "$branch" \
         	-p "$reponame/$branch" \
         	-m "Merge $reponame/$branch")"
-        git reset "$commit"
+        git reset -q "$commit"
     done
 done
 
