@@ -6,30 +6,37 @@ shopt -s inherit_errexit
 arg="${1-}"
 : "${MONOREPO_NAME:=core}"
 
-if [[ "$arg" == "" ]]; then
-	if [[ -d "$MONOREPO_NAME" && "$arg" != "--continue" ]]; then
-		>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+case "$arg" in
+	"")
+		if [[ -d "$MONOREPO_NAME" ]]; then
+			>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+			exit 1
+		fi
+		mkdir "$MONOREPO_NAME"
+		cd "$MONOREPO_NAME"
+		git init
+		;;
+
+	"--continue")
+		if [[ ! -d "$MONOREPO_NAME" ]]; then
+			>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
+			exit 1
+		fi
+		cd "$MONOREPO_NAME"
+		if git status --porcelain | grep . ; then
+			>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
+			exit 1
+		fi
+		# There isn’t anything special about --continue, really.
+		;;
+
+	*)
+		>&2 echo "Unexpected argument: $arg"
+		>&2 echo
+		>&2 echo "Usage: $0 [--continue]"
 		exit 1
-	fi
-	mkdir "$MONOREPO_NAME"
-	cd "$MONOREPO_NAME"
-	git init
-elif [[ "$arg" != "--continue" ]]; then
-	>&2 echo "Unexpected argument: $arg"
-	>&2 echo
-	>&2 echo "Usage: $0 [--continue]"
-	exit 1
-elif [[ ! -d "$MONOREPO_NAME" ]]; then
-	>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
-	exit 1
-else
-	cd "$MONOREPO_NAME"
-	if git status --porcelain | grep . ; then
-		>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
-		exit 1
-	fi
-	# There isn’t anything special about --continue, really.
-fi
+		;;
+esac
 
 empty_tree="$(git hash-object -t tree /dev/null)"
 

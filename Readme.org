@@ -464,30 +464,37 @@ We create a fresh directory for this script to run in, or continue on an existin
 arg="${1-}"
 : "${MONOREPO_NAME:=core}"
 
-if [[ "$arg" == "" ]]; then
-	if [[ -d "$MONOREPO_NAME" && "$arg" != "--continue" ]]; then
-		>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+case "$arg" in
+	"")
+		if [[ -d "$MONOREPO_NAME" ]]; then
+			>&2 echo "monorepo directory $MONOREPO_NAME already exists"
+			exit 1
+		fi
+		mkdir "$MONOREPO_NAME"
+		cd "$MONOREPO_NAME"
+		git init
+		;;
+
+	"--continue")
+		if [[ ! -d "$MONOREPO_NAME" ]]; then
+			>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
+			exit 1
+		fi
+		cd "$MONOREPO_NAME"
+		if git status --porcelain | grep . ; then
+			>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
+			exit 1
+		fi
+		# There isn’t anything special about --continue, really.
+		;;
+
+	,*)
+		>&2 echo "Unexpected argument: $arg"
+		>&2 echo
+		>&2 echo "Usage: $0 [--continue]"
 		exit 1
-	fi
-	mkdir "$MONOREPO_NAME"
-	cd "$MONOREPO_NAME"
-	git init
-elif [[ "$arg" != "--continue" ]]; then
-	>&2 echo "Unexpected argument: $arg"
-	>&2 echo
-	>&2 echo "Usage: $0 [--continue]"
-	exit 1
-elif [[ ! -d "$MONOREPO_NAME" ]]; then
-	>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
-	exit 1
-else
-	cd "$MONOREPO_NAME"
-	if git status --porcelain | grep . ; then
-		>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
-		exit 1
-	fi
-	# There isn’t anything special about --continue, really.
-fi
+		;;
+esac
 #+END_SRC
 
 Most of this rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
