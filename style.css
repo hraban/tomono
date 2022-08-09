@@ -1,3 +1,8 @@
+/*
+ * Full org style export for both light and dark themes, with some
+ * customizations.
+ */
+
 :root {
   color-scheme: light dark;
 }
