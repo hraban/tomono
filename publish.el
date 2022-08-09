@@ -7,4 +7,5 @@
 ;; The tomono script
 (org-babel-tangle)
 ;; This file is tangled in the previous step
-(load-file "export-html.el")
+(load-file "literate-html.el")
+(literate-html-export)

@@ -612,109 +612,136 @@ Most of the code in this repository is generated from this readme file. This can
 
 This file can also be exported to HTML. Executing the block below, before you export it, adds some extra flourish to that exported file:
 
-#+BEGIN_SRC emacs-lisp :exports code :results none :tangle export-html.el :eval never-export
-;; This is configuration for org mode itself, not tomono src code. Don't export this.
+#+BEGIN_SRC emacs-lisp :exports code :results none :tangle literate-html.el :eval never-export :noweb yes
+;;; literate-html.el --- Export org file to HTML -*- lexical-binding: t; -*-
 
-;; TODO: Clean this up. No globals etc.
+;; Author: Hraban Luyat <hraban@0brg.net>
+;; Keywords: lisp
+;; Version: 0.0.1
+;; Package-Requires: ((emacs "27.1") (dash "2.19.1"))
+;; URL: https://tomono.0brg.net/
+
+;; <<copyright>>
+
+;;; Commentary:
+
+;; Slightly more elaborate HTML export for literate programming in Org, aka
+;; babel + noweb. Adds references between listings.
+
+;;; Code:
 
 (require 'cl-lib)
 (require 'dash)
 (require 's)
+(require 'org)
+(require 'ox-html) ;; For the dynamic config vars
 
-(defun org-info-name (info)
+(defun literate-html--org-info-name (info)
   (nth 4 info))
 
-(defun insert-ln (&rest args)
+(defun literate-html--insert-ln (&rest args)
   (apply #'insert args)
   (newline))
 
-(defun should-reference (info)
+(defun literate-html--should-reference (info)
   "Determine if this info block is a referencing code block"
   (not (memq (alist-get :noweb (nth 2 info))
              '(nil "no"))))
 
-(defun re-findall (re str &optional offset)
+(defun literate-html--re-findall (re str &optional offset)
   "Find all matches of a regex in the given string"
   (let ((start (string-match re str offset))
         (end (match-end 0)))
     (when (numberp start)
-      (cons (substring str start end) (re-findall re str end)))))
+      (cons (substring str start end) (literate-html--re-findall re str end)))))
 
 ;; Match groups are the perfect tool to achieve this but EL's regex is
 ;; inferior and it's not worth the hassle. Blag it manually.
 
-(defun strip-delimiters (s prefix suffix)
-  "Strip a prefix and suffix delimiter, e.g.:
-(strip-delimiters \"<a>\" \"<\" \">\")
+(defun literate-html--strip-delimiters (s prefix suffix)
+  "Strip a PREFIX and SUFFIX delimiter from S.
+
+(literate-html--strip-delimiters \"<a>\" \"<\" \">\")
 => \"a\"
 
 Note this function trusts the input string has those delimiters"
   (substring s (length prefix) (- (length suffix))))
 
-(defun strip-noweb-delimiters (s)
-  "Strip the org noweb link delimiters, usually << and >>"
-  (strip-delimiters s org-babel-noweb-wrap-start org-babel-noweb-wrap-end))
+(defun literate-html--strip-noweb-delimiters (s)
+  "Strip the org noweb link delimiters from S, usually << and >>"
+  (literate-html--strip-delimiters s
+                        org-babel-noweb-wrap-start
+                        org-babel-noweb-wrap-end))
 
-(defun extract-refs (body)
-  (mapcar #'strip-noweb-delimiters (re-findall (org-babel-noweb-wrap) body)))
+(defun literate-html--extract-refs (body)
+  (mapcar #'literate-html--strip-noweb-delimiters
+          (literate-html--re-findall (org-babel-noweb-wrap) body)))
 
-(defun add-to-hash-list (k elem hash)
-  "Assuming the hash values are lists, add this element to k's list"
+(defun literate-html--add-to-hash-list (k elem hash)
+  "Assuming the HASH values are lists, add this ELEM to K’s list"
   (puthash k (cons elem (gethash k hash)) hash))
 
-(defun register-refs (name refs)
-  (puthash name refs forward-refs)
+(defvar literate-html--forward-refs)
+(defvar literate-html--back-refs)
+
+(defun literate-html--register-refs (name refs)
+  (puthash name refs literate-html--forward-refs)
   ;; Add a backreference to every ref
   (mapc (lambda (ref)
-          (add-to-hash-list ref name back-refs))
+          (literate-html--add-to-hash-list ref name literate-html--back-refs))
         refs))
 
-(defun parse-blocks ()
-  (let ((forward-refs (make-hash-table :test 'equal))
-        (back-refs (make-hash-table :test 'equal)))
+(defun literate-html--parse-blocks ()
+  (let ((literate-html--forward-refs (make-hash-table :test 'equal))
+        (literate-html--back-refs (make-hash-table :test 'equal)))
     (org-babel-map-src-blocks nil
       ;; Probably not v efficient, but should be memoized anyway?
       (let* ((info (org-babel-get-src-block-info full-block))
-             (name (org-info-name info)))
-        (when (and name (should-reference info))
-          (register-refs name (extract-refs body)))))
-    (list forward-refs back-refs)))
+             (name (literate-html--org-info-name info)))
+        (when (and name (literate-html--should-reference info))
+          (literate-html--register-refs name (literate-html--extract-refs body)))))
+    (list literate-html--forward-refs literate-html--back-refs)))
 
-(defun tomono--format-ref (ref)
+(defun literate-html--format-ref (ref)
   (format "[[%s][%s]]" ref ref))
 
-(defun insert-references-block (info title refs)
+(defun literate-html--insert-references-block (info title refs)
   (when refs
     (insert title)
-    (->> refs (mapcar 'tomono--format-ref) (s-join ", ") insert-ln)
+    (->> refs (mapcar 'literate-html--format-ref) (s-join ", ") literate-html--insert-ln)
     (newline)))
 
-(defun insert-references (info forward back)
+(defun literate-html--insert-references (info forward back)
   (when (or forward back)
     (newline)
-    (insert-ln ":REFERENCES:")
-    (insert-references-block info "References: " forward)
-    (insert-references-block info "Used by: " back)
-    (insert-ln ":END:")))
+    (literate-html--insert-ln ":REFERENCES:")
+    (literate-html--insert-references-block info "References: " forward)
+    (literate-html--insert-references-block info "Used by: " back)
+    (literate-html--insert-ln ":END:")))
 
-(defun get-references (name)
-  (list (gethash name forward-refs) (gethash name back-refs)))
-
-(defun fix-references (backend)
+(defun literate-html--fix-references (backend)
   "Append a references section to every noweb codeblock"
-  (cl-destructuring-bind (forward-refs back-refs) (parse-blocks)
+  (cl-destructuring-bind (forward-refs back-refs) (literate-html--parse-blocks)
     (org-babel-map-src-blocks nil
       (let ((info (org-babel-get-src-block-info full-block)))
-        (when (should-reference info)
-          (pcase-let ((`(,language ,body ,arguments ,switches ,name ,start ,coderef) info))
+        (when (literate-html--should-reference info)
+          (let ((name (literate-html--org-info-name info)))
             (goto-char end-block)
-            (apply #'insert-references info (get-references name))))))))
+            (literate-html--insert-references
+             info
+             (gethash name forward-refs)
+             (gethash name back-refs))))))))
 
-(add-hook 'org-export-before-parsing-hook 'fix-references nil t)
+(defun literate-html-export ()
+  "Export current org buffer to HTML"
+  (interactive)
+  (add-hook 'org-export-before-parsing-hook 'literate-html--fix-references nil t)
 
-;; The HTML output
-(let ((org-html-htmlize-output-type 'css))
-  (org-html-export-to-html))
+  ;; The HTML output
+  (let ((org-html-htmlize-output-type 'css))
+    (org-html-export-to-html)))
+
+(provide 'literate-html)
 #+END_SRC
 
 * Tests
