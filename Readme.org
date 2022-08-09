@@ -614,9 +614,11 @@ The easiest way to build everything in this repo is using docker:
 docker-compose run --rm build
 #+end_src
 
+Alternatively you can use Emacs to build the code manually:
+
 Most of the code in this repository is generated from this readme file. This can be done in stock Emacs, by opening this file and calling =M-x org-babel-tangle=.
 
-This file can also be exported to HTML. Executing the block below, before you export it, adds some extra flourish to that exported file:
+This file can also be exported to HTML. You can use the code below (and its exported command =literate-html-export=) to add some flourish to the HTML.
 
 #+BEGIN_SRC emacs-lisp :exports code :results none :tangle literate-html.el :eval never-export :noweb yes
 ;;; literate-html.el --- Export org file to HTML -*- lexical-binding: t; -*-
