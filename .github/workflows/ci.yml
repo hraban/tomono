@@ -40,7 +40,7 @@ jobs:
         run: docker-compose run --rm build
       -
         name: Create artifact bundle
-        run: tar cvf artifacts.tar test tomono index.html
+        run: tar cvf artifacts.tar test tomono index.html style.css
       -
         uses: actions/upload-artifact@v3
         with:
@@ -97,7 +97,7 @@ jobs:
           name: bundle-${{github.sha}}
       - name: Unpack artifacts
         run: |
-          tar xvf artifacts.tar index.html
+          tar xvf artifacts.tar index.html style.css
           rm -f artifacts.tar
       -
         name: configure git
