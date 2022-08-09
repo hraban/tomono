@@ -5,7 +5,7 @@
 #+PROPERTY:     header-args       :noweb no-export :eval never
 #+EXPORT_FILE_NAME: index.html
 #+html_head:    <link rel=stylesheet href=./style.css>
-#+options: html-link-use-abs-url:nil html-postamble:auto html-preamble:t ':t
+#+options: html-link-use-abs-url:nil html-postamble:auto html-preamble:t ':t toc:nil
 #+options: html-scripts:t html-style:t html5-fancy:t tex:html creator:t date:t author:nil
 #+html_doctype: html5
 #+html_container: div
@@ -15,6 +15,8 @@
 This script merges multiple independent tiny repositories into a single "monorepo". Every original repo is moved into its own subdirectory, branches with the same name are all merged. See [[#example][Example]] for the details.
 
 Download the =tomono= script on [[https://github.com/hraban/tomono][github.com/hraban/tomono]].
+
+#+TOC: headlines 1
 
 * Features
 
@@ -28,6 +30,7 @@ Download the =tomono= script on [[https://github.com/hraban/tomono][github.com/h
 - 📁 Every project gets its own subdirectory
 
 * Usage
+#+TOC: headlines 1 local
 
 Run the =tomono= script with your config on stdin, in the following format:
 
@@ -115,6 +118,7 @@ Source: [[https://github.com/mwasilew2/tomono/commit/16aa7918aa9d912a30b563152bd
 :PROPERTIES:
 :CUSTOM_ID: example
 :END:
+#+TOC: headlines 1 local
 
 Run these commands to set up a fresh directory with git monorepos that you can later merge:
 
@@ -338,6 +342,8 @@ I am a new zim feature
 #+begin_quote
 (This section is best viewed in [[https://tomono.0brg.net/#implementation][HTML form]]; the GitHub Readme viewer misses some info.)
 #+end_quote
+
+#+TOC: headlines 1 local
 
 The outer program structure is a flat bash script which loops over every repo supplied over stdin:
 
