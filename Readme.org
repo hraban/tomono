@@ -144,30 +144,30 @@ mkdir foo
     git commit -m "foo’s feature branch A"
 )
 
-mkdir bar
+mkdir 中文
 (
-    cd bar
+    cd 中文
     git init
-    echo "This is bar" > i-am-bar.txt
+    echo "你好" > 你好.txt
     git add -A
-    git commit -m "bar’s master"
+    git commit -m "中文的root"
     git tag v1.0
     git checkout -b branch-a
-    echo "I am bar’s side of feature A" > feature-a.txt
+    echo "你好 from feature-a" > feature-a.txt
     git add -A
-    git commit -m "bar’s feature branch A"
+    git commit -m "new 中文 feature branch A"
     git branch branch-b master
     git checkout branch-b
-    echo "I am an entirely new feature of bar: B" > feature-b.txt
+    echo "I am an entirely new 中文 feature: B" > feature-b.txt
     git add -A
-    git commit -m "bar’s feature branch B"
+    git commit -m "中文’s feature branch B"
 )
 #+end_src
 
 You now have two directories:
 
 - =foo= (branches: =master=, =branch-a=)
-- =bar= (branches: =master=, =branch-a=, =branch-b=)
+- =中文= (branches: =master=, =branch-a=, =branch-b=)
 
 ** Combine into monorepo
 
@@ -176,42 +176,42 @@ Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, fr
 #+begin_src shell :exports code :eval never-export :results none :noweb-ref test-run
 tomono <<EOF
 $PWD/foo foo
-$PWD/bar bar
+$PWD/中文 中文
 EOF
 #+end_src
 
 This will create a new directory, =core=, where you can find a git tree which looks somewhat like this:
 
 #+begin_example
-,*   Merge foo/branch-a (branch-a)
+,*   b742af2 Merge 中文/branch-a (branch-a)
 |\
-| * foo’s feature branch A (foo/branch-a)
-,* |   Merge bar/branch-a
+| * c05c53c new 中文 feature branch A (中文/branch-a)
+,* |   a51d138 Merge foo/branch-a
 |\ \
-| * | bar’s feature branch A (bar/branch-a)
-,* | | Root commit for monorepo branch branch-a
+| * | ebb490a foo’s feature branch A (foo/branch-a)
+,* | | a08fa18 Root commit for monorepo branch branch-a
  / /
-| | *   Merge foo/master (HEAD -> master)
+| | *   c53bf94 Merge 中文/branch-b (branch-b)
+| | |\
+| | | * 5e7f4f5 中文’s feature branch B (中文/branch-b)
+| | |/
+| |/|
+| | * 2738327 Root commit for monorepo branch branch-b
+| |
+| | *   9a4b33a Merge 中文/master (HEAD -> master)
 | | |\
 | | |/
 | |/|
-| * | foo’s master (tag: foo/v1.0, foo/master)
-| * | foo’s empty root
+| * | a9841a8 中文的root (tag: 中文/v1.0, 中文/master)
 |  /
-| *   Merge bar/master
+| *   b75840e Merge foo/master
 | |\
 | |/
 |/|
-| * Root commit for monorepo branch master
-|
-| *   Merge bar/branch-b (branch-b)
-| |\
-| | * bar’s feature branch B (bar/branch-b)
-| |/
-|/|
-,* | bar’s master (tag: bar/v1.0, bar/master)
+,* | 1515265 foo’s master (tag: foo/v1.0, foo/master)
+,* | f71fcde foo’s empty root
  /
-,* Root commit for monorepo branch branch-b
+,* 7803cf5 Root commit for monorepo branch master
 #+end_example
 
 ** Pull in new changes from a remote
@@ -298,40 +298,40 @@ $ git checkout master
 Switched to branch 'master'
 $ tree
 .
-├── bar
-│   └── i-am-bar.txt
 ├── foo
 │   └── i-am-foo.txt
-└── lib
-    └── zim
-        └── i-am-zim.txt
+├── lib
+│   └── zim
+│       └── i-am-zim.txt
+└── 中文
+    └── 你好.txt
 
 4 directories, 3 files
 $ git checkout branch-a
 Switched to branch 'branch-a'
 $ tree
 .
-├── bar
-│   ├── feature-a.txt
-│   └── i-am-bar.txt
 ├── foo
 │   ├── feature-a.txt
 │   └── i-am-foo.txt
-└── lib
-    └── zim
-        ├── feature-a.txt
-        └── i-am-zim.txt
+├── lib
+│   └── zim
+│       ├── feature-a.txt
+│       └── i-am-zim.txt
+└── 中文
+    ├── feature-a.txt
+    └── 你好.txt
 
 4 directories, 6 files
 $ head **/feature-a.txt
-==> bar/feature-a.txt <==
-I am bar’s side of feature A
-
 ==> foo/feature-a.txt <==
 I am a new foo feature
 
 ==> lib/zim/feature-a.txt <==
 I am a new zim feature
+
+==> 中文/feature-a.txt <==
+你好 from feature-a
 #+end_example
 
 * Implementation
@@ -766,6 +766,7 @@ The examples from this document can be combined into a test script:
 #+name: test
 #+BEGIN_SRC shell :tangle test :shebang "#!/usr/bin/env bash" :noweb yes :references yes
 set -xeuo pipefail
+shopt -s inherit_errexit
 shopt -s globstar
 export DEBUGSH=true
 
@@ -799,26 +800,20 @@ EOF
 echo "Checking master"
 git checkout master
 diff -u <(head **/*.*) <(cat <<EOF
-==> bar/i-am-bar.txt <==
-This is bar
-
 ==> foo/i-am-foo.txt <==
 This is foo
 
 ==> lib/zim/i-am-zim.txt <==
 This is zim
+
+==> 中文/你好.txt <==
+你好
 EOF
 )
 
 echo "Checking branch-a"
 git checkout branch-a
 diff -u <(head **/*.*) <(cat <<EOF
-==> bar/feature-a.txt <==
-I am bar’s side of feature A
-
-==> bar/i-am-bar.txt <==
-This is bar
-
 ==> foo/feature-a.txt <==
 I am a new foo feature
 
@@ -830,6 +825,12 @@ I am a new zim feature
 
 ==> lib/zim/i-am-zim.txt <==
 This is zim
+
+==> 中文/feature-a.txt <==
+你好 from feature-a
+
+==> 中文/你好.txt <==
+你好
 EOF
 )
 #+end_src
