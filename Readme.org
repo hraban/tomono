@@ -40,6 +40,7 @@ git@github.com:mycompany/my-repo-abc.git  abc
 git@github.com:mycompany/my-repo-def.git  def
 git@github.com:mycompany/my-lib-uuu.git   uuu  lib/uuu
 git@github.com:mycompany/my-lib-zzz.git   zzz  lib/zzz
+https://gitee.com/shijie/zhongguo.git     中国
 #+end_example
 
 Concrete example:
