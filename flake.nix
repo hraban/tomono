@@ -76,7 +76,6 @@
                 nativeBuildInputs = [
                   # The actual code being tested. Must be in PATH.
                   self.packages.${system}.default
-                  pkgs.makeWrapper
                 ];
                 dontUnpack = true;
                 buildPhase = ''

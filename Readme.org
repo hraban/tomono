@@ -620,23 +620,15 @@ The real question is: why is this not standard in Bash for Windows? Who knows. I
 
 ** Nix
 
-You can run this directly from github:
+To build a stand-alone binary:
 
 #+begin_src shell :results none :eval never-export
-nix run github:hraban/tomono
-#+end_src
-
-Or you can build a stand-alone binary:
-
-#+begin_src shell :results none :eval never-export
-nix build github:hraban/tomono#dist
+nix build .#dist
 #+end_src
 
 Find the binary in =./result/bin/=, and the documentation in =./result/doc=.
 
-Tip: to build local changes, substitute =github:hraban/tomono= with a single period (=.=).
-
-To test the code (this only really makes sense on a local checkout):
+To test the code
 
 #+begin_src shell :results none :eval never
 nix flake check .
