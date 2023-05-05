@@ -1,5 +1,0 @@
-services:
-  build:
-    build: ./emacs-docker/
-    volumes:
-      - .:/data

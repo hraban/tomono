@@ -16,9 +16,10 @@ defaults:
 
 jobs:
 
-  nix:
+  build:
+    timeout-minutes: 10
+    name: "Build and Test"
     runs-on: ubuntu-latest
-    name: "Build using Nix"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -47,35 +48,12 @@ jobs:
           name: bundle-${{github.sha}}
           path: artifacts.tar
 
-  docker:
-    timeout-minutes: 10
-    name: "Build using Docker"
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      - # This is very wasteful but caching docker images on GH actions is
-        # INSANELY DIFFICULT!!! Honestly they bring it on themselves, this is
-        # not an abstruse setup. But until I can cache docker images (let alone
-        # layers), without pollution between branches / PRs, and without
-        # 1873907182301273 lines of code, config and separate auths and external
-        # services, I’ll just stick to rebuilding the entire image every time.
-        name: Build the Docker image
-        run: docker compose build
-      -
-        name: Tangle code and export HTML
-        run: docker compose run --rm build
-
   deploy_pages:
     timeout-minutes: 10
     if: ${{ github.ref_type == 'branch' && github.ref == 'refs/heads/master' }}
     name: "Deploy the HTML to GitHub Pages"
     runs-on: ubuntu-latest
-    needs: nix
+    needs: build
     steps:
       -
         name: Checkout

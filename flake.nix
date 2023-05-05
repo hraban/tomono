@@ -30,7 +30,7 @@
               buildPhase = ''
                 # Remove the stale VCS copy
                 rm tomono
-                ${myemacs}/bin/emacs --batch --load emacs-docker/init.el --load publish.el
+                ${myemacs}/bin/emacs --batch --load publish.el
               '';
               installPhase = ''
                 mkdir -p $out/{bin,doc}

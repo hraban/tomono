@@ -618,12 +618,6 @@ The real question is: why is this not standard in Bash for Windows? Who knows. I
 
 * Building the code                                                :noexport:
 
-** Docker
-
-#+begin_src shell :exports code :results none :eval never-export
-docker compose run --rm build
-#+end_src
-
 ** Nix
 
 You can run this directly from github:
