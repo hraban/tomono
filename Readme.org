@@ -495,10 +495,19 @@ case "$arg" in
 		# There isn’t anything special about --continue, really.
 		;;
 
+	"--help" | "-h" | "help")
+		cat <<EOF
+Usage: tomono [--continue]
+
+For more information, see the documentation at "https://tomono.0brg.net".
+EOF
+		exit 0
+		;;
+
 	,*)
 		>&2 echo "Unexpected argument: $arg"
 		>&2 echo
-		>&2 echo "Usage: $0 [--continue]"
+		>&2 echo "Usage: tomono [--continue]"
 		exit 1
 		;;
 esac
@@ -609,13 +618,45 @@ The real question is: why is this not standard in Bash for Windows? Who knows. I
 
 * Building the code                                                :noexport:
 
-The easiest way to build everything in this repo is using docker:
+** Docker
 
 #+begin_src shell :exports code :results none :eval never-export
-docker-compose run --rm build
+docker compose run --rm build
 #+end_src
 
-Alternatively you can use Emacs to build the code manually:
+** Nix
+
+You can run this directly from github:
+
+#+begin_src shell :results none :eval never-export
+nix run github:hraban/tomono
+#+end_src
+
+Or you can build a stand-alone binary:
+
+#+begin_src shell :results none :eval never-export
+nix build github:hraban/tomono#dist
+#+end_src
+
+Find the binary in =./result/bin/=, and the documentation in =./result/doc=.
+
+Tip: to build local changes, substitute =github:hraban/tomono= with a single period (=.=).
+
+To test the code (this only really makes sense on a local checkout):
+
+#+begin_src shell :results none :eval never
+nix flake check .
+#+end_src
+
+Troubleshooting: If you don’t have flakes enabled, add this flag just after the =nix= command:
+
+#+begin_src shell :results none :eval never
+nix --extra-experimental-features "nix-command flakes" ...
+#+end_src
+
+** Manually using Emacs
+
+You can use Emacs to build the code manually:
 
 Most of the code in this repository is generated from this readme file. This can be done in stock Emacs, by opening this file and calling =M-x org-babel-tangle=.
 

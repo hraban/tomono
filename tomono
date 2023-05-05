@@ -30,10 +30,19 @@ case "$arg" in
 		# There isn’t anything special about --continue, really.
 		;;
 
+	"--help" | "-h" | "help")
+		cat <<EOF
+Usage: tomono [--continue]
+
+For more information, see the documentation at "https://tomono.0brg.net".
+EOF
+		exit 0
+		;;
+
 	*)
 		>&2 echo "Unexpected argument: $arg"
 		>&2 echo
-		>&2 echo "Usage: $0 [--continue]"
+		>&2 echo "Usage: tomono [--continue]"
 		exit 1
 		;;
 esac
