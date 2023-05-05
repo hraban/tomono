@@ -26,7 +26,6 @@
               pname = "tomono";
               version = "2.0.0";
               src = ./.;
-              outputs = [ "out" ];
               buildPhase = ''
                 # Remove the stale VCS copy
                 rm tomono
@@ -35,9 +34,6 @@
               installPhase = ''
                 mkdir -p $out/{bin,doc}
                 cp tomono $out/bin/
-                # rely on the multiple-outputs.sh shell hook to move this to
-                # $doc. That way, we can leave it all in $out by just overriding
-                # the outputs attr on the derivation.
                 cp index.html style.css $out/doc
               '';
               nativeBuildInputs = [ pkgs.makeWrapper ];
@@ -55,8 +51,6 @@
             # For distribution outside of Nix
             dist = self.packages.${system}.default.overrideAttrs (_: {
               dontFixup = true;
-              # Leave everything in the output for easier publishing.
-              outputs = [ "out" ];
             });
           };
           checks.default =
