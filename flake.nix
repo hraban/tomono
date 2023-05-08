@@ -25,11 +25,11 @@
             default = pkgs.stdenv.mkDerivation {
               pname = "tomono";
               version = "2.0.0";
-              src = ./.;
+              src = cleanSource ./.;
               buildPhase = ''
                 # Remove the stale VCS copy
                 rm tomono
-                ${myemacs}/bin/emacs --batch --load publish.el
+                ${myemacs}/bin/emacs -Q --script ./publish.el
               '';
               installPhase = ''
                 mkdir -p $out/{bin,doc}
