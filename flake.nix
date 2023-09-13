@@ -28,7 +28,7 @@
               src = cleanSource ./.;
               buildPhase = ''
                 # Remove the stale VCS copy
-                rm tomono
+                rm -f tomono
                 ${myemacs}/bin/emacs -Q --script ./publish.el
               '';
               installPhase = ''
