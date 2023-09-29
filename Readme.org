@@ -402,12 +402,12 @@ This is the money shot.
 #+BEGIN_SRC shell
 <<ensure-on-target-branch-in-monorepo>>
 
-git read-tree --prefix "$repopath" "$reponame/$branch"
+git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
 tree="$(git write-tree)"
 commit="$(git commit-tree \
 	"$tree" \
 	-p "$branch" \
-	-p "$reponame/$branch" \
+	-p "refs/remotes/$reponame/$branch" \
 	-m "Merge $reponame/$branch")"
 git reset -q "$commit"
 #+END_SRC
@@ -804,16 +804,21 @@ export PATH="$PWD:$PATH"
 <<test-setup>>
 <<test-run>>
 <<test-evaluate>>
+
+<<test-extra>>
 #+END_SRC
 
 #+begin_comment
 I’ve chosen to export the fully tangled script to HTML export and hide the separate test implementation below, because I think it makes more sense as a single large script.
+
+Another note: I originally organized the code in this "1. implementation, 2. example code (aka test setup), 3. test & checks" order during the rewrite, but I now realise that was "writer-first" thinking, not "reader-first". The natural flow of this text, it is now becoming clear, is to organize all code by subject, aka by which problem it’s solving. When you find a new bug, you want both the explanation of the bug, the code that solves it, and the tests that check it, to all live in one single location. And again that top-level "test setup, test run, test evaluate": that’s more top-level writer-first organization. As a reader you want tiny independent chunks.
 #+end_comment
 
 All we needed to write was the code that actually evaluates the tests and fixtures.
 
 #+name: test-evaluate
 #+begin_src shell :exports none :results none :eval never-export :references yes
+(
 cd core
 
 echo "Checking branch list"
@@ -861,9 +866,55 @@ This is zim
 你好
 EOF
 )
+)
 #+end_src
 
 I use that weird =diff -u <(..)= trick instead of a string compare like ~[[ "foo" == "..." ]]~ , because the diff shows you where the problem is, instead of just failing the test without comment.
+
+** Edge case: same branch and tag name
+
+If you have a branch and tag with the same name in a git repo, you will be familiar with this error:
+
+#+begin_quote
+warning: refname 'foo' is ambiguous.
+#+end_quote
+
+See [[https://github.com/hraban/tomono/issues/53][#53]]. This happens whenever you refer to the tag or branch by its bare name, without specifying whether it’s a tag or a branch. To fix this, the monorepo script must always use =refs/remotes/...= to specify the branch name.
+
+Example:
+
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-extra
+mkdir duplicates
+(
+  cd duplicates
+  git init -b check-dupes
+  echo a > a
+  echo b > b
+  git add -A
+  git commit -m commit1 a
+  git tag check-dupes
+  git commit -m commit2 b
+)
+#+end_src
+
+We now have a =duplicates= repository with a branch /and/ tag =check-dupes=, pointing at different revisions. After including it in the monorepo:
+
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-extra
+echo "$PWD/duplicates duplicates" | tomono --continue
+#+end_src
+
+We should get:
+
+#+begin_src shell :exports both :eval never-exports :results none :noweb-ref test-extra
+(
+  cd core
+  git checkout check-dupes
+  # This file must exist
+  diff -u duplicates/a <(echo a)
+  # This file too
+  diff -u duplicates/b <(echo b)
+)
+#+end_src
 
 * Copyright and license
 
