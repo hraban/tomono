@@ -45,7 +45,7 @@ https://gitee.com/shijie/zhongguo.git     中国
 
 Concrete example:
 
-#+begin_src shell :eval never :exports code
+#+begin_src shell :exports code
 $ cat my-repos.txt | /path/to/tomono
 #+end_src
 
@@ -75,7 +75,7 @@ Large teams can’t afford to “stop the world” while a migration is in progr
 
 Here’s how to pull in an entirely new set of repositories:
 
-#+begin_src shell :eval never :exports code
+#+begin_src shell :exports code
 /path/to/tomono --continue < my-new-repos.txt
 #+end_src
 
@@ -87,7 +87,7 @@ Tags are namespaced per remote, to avoid clashes. If your remote =foo= and =bar=
 
 If you don’t like this rewriting, you can fetch all tags from a specific remote to the top-level of the monorepo:
 
-#+begin_src shell :eval never :export code :results none
+#+begin_src shell :export code :results none
 $ git fetch --tags foo
 #+end_src
 
@@ -105,7 +105,7 @@ v5.9-rc4-0-gf4d51dffc6c0
 
 If you know what you’re doing, you can force update all signed and annotated tags to their (nested) ref tag name with the following snippet:
 
-#+begin_src shell :eval never :export code :results none
+#+begin_src shell :export code :results none
 git for-each-ref --format '%(objecttype) %(refname:lstrip=2)' | \
     sed -ne 's/^tag //p' |
     GIT_EDITOR=true xargs -I + -n 1 -- git tag -f -a + +^{}
@@ -231,7 +231,7 @@ Because their history was imported verbatim and nothing has been rewritten, you 
 
 First, fetch the changes from the remote:
 
-#+begin_src shell :exports code :eval never :results none
+#+begin_src shell :exports code :results none
 $ cd core
 $ git fetch foo
 #+end_src
@@ -245,7 +245,7 @@ git merge -X subtree=foo/ foo/master
 
 And the updates should be reflected in the monorepo:
 
-#+begin_src shell :exports code :eval never :results none
+#+begin_src shell :exports code :results none
 $ cat foo/i-am-foo.txt
 This is foo
 New changes
@@ -445,7 +445,7 @@ Sources:
 
 GitHub user @woopla proposed in [[https://github.com/hraban/tomono/pull/42][#42]] the ability to merge a minirepo into the monorepo root, as if you used =.= as the subdirectory. We ended up not going for it, but it was interesting to investigate how to do this with =git read-tree=. The closest I got was:
 
-#+begin_src shell :eval never
+#+begin_src shell
 if [[ "$repopath" == "." ]]; then
     # Experimental—is this how git read-tree works? I find it very confusing.
     git read-tree "$branch" "$reponame/$branch"
@@ -535,7 +535,7 @@ Solutions I abandoned, due to one short-coming or another:
 
 The most straight-forward way to list branch names:
 
-#+begin_src shell :eval never :exports code :results none
+#+begin_src shell :exports code :results none
 $ git branch -r
   bar/branch-a
   bar/branch-b
@@ -630,13 +630,13 @@ Find the binary in =./result/bin/=, and the documentation in =./result/doc=.
 
 To test the code
 
-#+begin_src shell :results none :eval never
+#+begin_src shell :results none
 nix flake check .
 #+end_src
 
 Troubleshooting: If you don’t have flakes enabled, add this flag just after the =nix= command:
 
-#+begin_src shell :results none :eval never
+#+begin_src shell :results none
 nix --extra-experimental-features "nix-command flakes" ...
 #+end_src
 
