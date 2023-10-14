@@ -881,7 +881,7 @@ If you have a branch and tag with the same name in a git repo, you will be famil
 warning: refname 'foo' is ambiguous.
 #+end_quote
 
-See [[https://github.com/hraban/tomono/issues/53][#53]]. This happens whenever you refer to the tag or branch by its bare name, without specifying whether it’s a tag or a branch. To fix this, the monorepo script must always use =refs/remotes/...= to specify the branch name.
+See [[https://github.com/hraban/tomono/issues/53][#53]]. This happens whenever you refer to the tag or branch by its bare name, without specifying whether it’s a tag or a branch. To fix this, the monorepo script must always use =refs/heads/...= to specify the branch name.
 
 Example:
 
