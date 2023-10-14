@@ -7,44 +7,44 @@ arg="${1-}"
 : "${MONOREPO_NAME:=core}"
 
 case "$arg" in
-	"")
-		if [[ -d "$MONOREPO_NAME" ]]; then
-			>&2 echo "monorepo directory $MONOREPO_NAME already exists"
-			exit 1
-		fi
-		mkdir "$MONOREPO_NAME"
-		cd "$MONOREPO_NAME"
-		git init
-		;;
+    "")
+        if [[ -d "$MONOREPO_NAME" ]]; then
+            >&2 echo "monorepo directory $MONOREPO_NAME already exists"
+            exit 1
+        fi
+        mkdir "$MONOREPO_NAME"
+        cd "$MONOREPO_NAME"
+        git init
+        ;;
 
-	"--continue")
-		if [[ ! -d "$MONOREPO_NAME" ]]; then
-			>&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
-			exit 1
-		fi
-		cd "$MONOREPO_NAME"
-		if git status --porcelain | grep . ; then
-			>&2 echo "Git status shows pending changes in the repo. Cannot --continue."
-			exit 1
-		fi
-		# There isn’t anything special about --continue, really.
-		;;
+    "--continue")
+        if [[ ! -d "$MONOREPO_NAME" ]]; then
+            >&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
+            exit 1
+        fi
+        cd "$MONOREPO_NAME"
+        if git status --porcelain | grep . ; then
+            >&2 echo "Git status shows pending changes in the repo. Cannot --continue."
+            exit 1
+        fi
+        # There isn’t anything special about --continue, really.
+        ;;
 
-	"--help" | "-h" | "help")
-		cat <<EOF
+    "--help" | "-h" | "help")
+        cat <<EOF
 Usage: tomono [--continue]
 
 For more information, see the documentation at "https://tomono.0brg.net".
 EOF
-		exit 0
-		;;
+        exit 0
+        ;;
 
-	*)
-		>&2 echo "Unexpected argument: $arg"
-		>&2 echo
-		>&2 echo "Usage: tomono [--continue]"
-		exit 1
-		;;
+    *)
+        >&2 echo "Unexpected argument: $arg"
+        >&2 echo
+        >&2 echo "Usage: tomono [--continue]"
+        exit 1
+        ;;
 esac
 
 empty_tree="$(git hash-object -t tree /dev/null)"
@@ -62,10 +62,10 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-        	tree="$(git commit-tree \
-        		"$empty_tree" \
-        		-m "Root commit for monorepo branch $branch")"
-        	git branch -- "$branch" "$tree"
+            tree="$(git commit-tree \
+                "$empty_tree" \
+                -m "Root commit for monorepo branch $branch")"
+            git branch -- "$branch" "$tree"
         fi
         git symbolic-ref HEAD "refs/heads/$branch"
         git reset -q
@@ -73,10 +73,10 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
         git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
         tree="$(git write-tree)"
         commit="$(git commit-tree \
-        	"$tree" \
-        	-p "$branch" \
-        	-p "refs/remotes/$reponame/$branch" \
-        	-m "Merge $reponame/$branch")"
+            "$tree" \
+            -p "$branch" \
+            -p "refs/remotes/$reponame/$branch" \
+            -m "Merge $reponame/$branch")"
         git reset -q "$commit"
     done
 done
