@@ -618,15 +618,17 @@ The real question is: why is this not standard in Bash for Windows? Who knows. I
 
 * Building the code                                                :noexport:
 
+This is for tomono development only—end users can directly use the =tomono= script from this repo without building anything.
+
 ** Nix
 
-To build a stand-alone binary:
+To build a stand-alone executable:
 
 #+begin_src shell :results none :eval never-export
 nix build .#dist
 #+end_src
 
-Find the binary in =./result/bin/=, and the documentation in =./result/doc=.
+Find the executable in =./result/bin/=, and the documentation in =./result/doc=.
 
 To test the code
 
