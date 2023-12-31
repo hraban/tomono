@@ -4,51 +4,49 @@ set -euo pipefail ${DEBUGSH+-x}
 if ((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4))); then
 	shopt -s inherit_errexit
 fi
-
 # Poor man’s arg parse :/
-arg="${1-}"
-: "${MONOREPO_NAME:=core}"
 
-case "$arg" in
-    "")
-        if [[ -d "$MONOREPO_NAME" ]]; then
-            >&2 echo "monorepo directory $MONOREPO_NAME already exists"
-            exit 1
-        fi
-        mkdir "$MONOREPO_NAME"
-        cd "$MONOREPO_NAME"
-        git init
-        ;;
+print-usage () {
+    cat <<EOF
+Usage:
 
-    "--continue")
-        if [[ ! -d "$MONOREPO_NAME" ]]; then
-            >&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
-            exit 1
-        fi
-        cd "$MONOREPO_NAME"
-        if git status --porcelain | grep . ; then
-            >&2 echo "Git status shows pending changes in the repo. Cannot --continue."
-            exit 1
-        fi
-        # There isn’t anything special about --continue, really.
-        ;;
-
-    "--help" | "-h" | "help")
-        cat <<EOF
-Usage: tomono [--continue]
+    cat my-projects.txt | tomono
 
 For more information, see the documentation at "https://tomono.0brg.net".
 EOF
-        exit 0
-        ;;
+}
 
-    *)
-        >&2 echo "Unexpected argument: $arg"
-        >&2 echo
-        >&2 echo "Usage: tomono [--continue]"
-        exit 1
-        ;;
+arg="${1-}"
+case "$arg" in
+	"")
+		# Pass
+		;;
+	"--help" | "-h" | "help")
+		print-usage
+		exit 0
+		;;
+	*)
+		print-usage
+		exit 1
+		;;
 esac
+: "${MONOREPO_NAME:=core}"
+
+if [[ ! -a "$MONOREPO_NAME" ]]; then
+    mkdir "$MONOREPO_NAME"
+    cd "$MONOREPO_NAME"
+    git init
+else
+    cd "$MONOREPO_NAME"
+    if git status --porcelain | grep . ; then
+        >&2 cat <<EOF
+A repository already exists in $MONOREPO_NAME, which is fine, but 'git status'
+shows pending changes, which is dangerous. Commit these changes or remove them
+somehow, and try again.
+EOF
+        exit 1
+    fi
+fi
 
 empty_tree="$(git hash-object -t tree /dev/null)"
 
@@ -56,6 +54,10 @@ empty_tree="$(git hash-object -t tree /dev/null)"
 while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     if [[ -z "$repopath" ]]; then
         repopath="$reponame"
+    fi
+
+    if git config "remote.${reponame}.url" >/dev/null; then
+        continue
     fi
 
     git remote add "$reponame" "$repourl"

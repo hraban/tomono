@@ -55,6 +55,16 @@ That should be all ✅.
 Yes #uselessuseofcat but it is clearer than < > ! # $) &&*!&♨±⌘︎ to newbies.
 #+end_comment
 
+** Continue: New Repository
+
+There will likely be a few repositories you didn’t get around to merging into the monorepo on the first go. The good news is you need no special handling; you can just rerun the same command with your new repositories added, and it will automatically fetch them for you:
+
+#+begin_src shell :exports code
+/path/to/tomono < my-repos.txt
+#+end_src
+
+Make sure you have your environment set up exactly the same as the first time you ran it. Particularly, you must be in the parent dir of the monorepo.
+
 ** Custom name for monorepo directory
 
 Don’t like =core=? Set a different name through an envvar before running the script:
@@ -68,18 +78,6 @@ export MONOREPO_NAME=the-big-repo
 No need to do anything. This script does not handle any master / main branch in any special way. It just merges whatever branches exist. Don’t have a “master” branch? None will be created.
 
 Make sure your own computer has the right branch set up in its =init.defaultBranch= setting.
-
-** Continue existing migration
-
-Large teams can’t afford to “stop the world” while a migration is in progress. You’ll be fixing stuff and pulling in new repositories as you go.
-
-Here’s how to pull in an entirely new set of repositories:
-
-#+begin_src shell :exports code
-/path/to/tomono --continue < my-new-repos.txt
-#+end_src
-
-Make sure you have your environment set up exactly the same as above. Particularly, you must be in the parent dir of the monorepo.
 
 ** Tags
 
@@ -175,10 +173,9 @@ You now have two directories:
 Assuming the =tomono= script is in your =$PATH=, you can invoke it like this, from that same directory:
 
 #+begin_src shell :exports code :eval never-export :results none :noweb-ref test-run
-tomono <<EOF
-$PWD/foo foo
-$PWD/中文 中文
-EOF
+echo "$PWD/foo foo" > my-projects.txt
+echo "$PWD/中文 中文" >> my-projects.txt
+tomono < my-projects.txt
 #+end_src
 
 This will create a new directory, =core=, where you can find a git tree which looks somewhat like this:
@@ -286,7 +283,8 @@ mkdir zimlib
 Continue importing it:
 
 #+begin_src shell :exports code :eval never-export :results none :noweb-ref test-run
-echo "$PWD/zimlib zim lib/zim" | tomono --continue
+echo "$PWD/zimlib zim lib/zim" >> my-projects.txt
+tomono < my-projects.txt
 #+end_src
 
 Note that we used a different name for this subrepo, inside the =lib= dir.
@@ -359,7 +357,9 @@ while <<windows-fix>> read -r repourl reponame repopath; do
         repopath="$reponame"
     fi
 
-    <<handle-remote>>
+    <<ignore-existing-remotes>>
+
+    <<handle-new-remote>>
 done
 
 <<finalize>>
@@ -369,13 +369,31 @@ done
 
 ** Per repository
 
+*** Check if it already exists
+
+Executed from within the per-repo while loop: check if this remote already exists, first.
+
+#+caption: ignore-existing-remotes
+#+name: ignore-existing-remotes
+#+begin_src shell :references yes
+if git config "remote.${reponame}.url" >/dev/null; then
+    continue
+fi
+#+end_src
+
+Keeping it simple for now; no automatic pulling in of updates. That’s a future feature.
+
+Source: https://stackoverflow.com/a/57936187
+
+*** If it’s new
+
 Every repository is fetched and fully handled individually, and sequentially:
 
 1. fetch all the data related to this repository,
 2. immediately check out and initialise every single branch which belongs to that repository.
 
-#+CAPTION: handle-remote
-#+NAME: handle-remote
+#+CAPTION: handle-new-remote
+#+NAME: handle-new-remote
 #+BEGIN_SRC shell :references yes
 git remote add "$reponame" "$repourl"
 git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
@@ -458,64 +476,33 @@ I must to confess I find the [[https://git-scm.com/docs/git-read-tree][git read-
 
 If anyone could explain to me exactly what this tool is supposed to do, what those separate stages are (it talks about “stage 0” to “stage 3” in its 3 way merge), and how you would cleanly do this, just for argument’s sake, I’d love to know.
 
-But, as it turned out, this tool already has a way to merge a repo into the root: just make it the monorepo, and use it as a target for a =--continue= operation. That solves that.
+But, as it turned out, this tool already has a way to merge a repo into the root: just make that existing repo the monorepo. That solves that.
 
 ** Set up the monorepo directory
 
-We create a fresh directory for this script to run in, or continue on an existing one if the =--continue= flag is passed.
-
 #+CAPTION: prep-dir
 #+NAME: prep-dir
-#+BEGIN_SRC shell
-# Poor man’s arg parse :/
-arg="${1-}"
+#+begin_src shell
 : "${MONOREPO_NAME:=core}"
 
-case "$arg" in
-    "")
-        if [[ -d "$MONOREPO_NAME" ]]; then
-            >&2 echo "monorepo directory $MONOREPO_NAME already exists"
-            exit 1
-        fi
-        mkdir "$MONOREPO_NAME"
-        cd "$MONOREPO_NAME"
-        git init
-        ;;
-
-    "--continue")
-        if [[ ! -d "$MONOREPO_NAME" ]]; then
-            >&2 echo "Asked to --continue, but monorepo directory $MONOREPO_NAME doesn’t exist"
-            exit 1
-        fi
-        cd "$MONOREPO_NAME"
-        if git status --porcelain | grep . ; then
-            >&2 echo "Git status shows pending changes in the repo. Cannot --continue."
-            exit 1
-        fi
-        # There isn’t anything special about --continue, really.
-        ;;
-
-    "--help" | "-h" | "help")
-        cat <<EOF
-Usage: tomono [--continue]
-
-For more information, see the documentation at "https://tomono.0brg.net".
+if [[ ! -a "$MONOREPO_NAME" ]]; then
+    mkdir "$MONOREPO_NAME"
+    cd "$MONOREPO_NAME"
+    git init
+else
+    cd "$MONOREPO_NAME"
+    if git status --porcelain | grep . ; then
+        >&2 cat <<EOF
+A repository already exists in $MONOREPO_NAME, which is fine, but 'git status'
+shows pending changes, which is dangerous. Commit these changes or remove them
+somehow, and try again.
 EOF
-        exit 0
-        ;;
-
-    ,*)
-        >&2 echo "Unexpected argument: $arg"
-        >&2 echo
-        >&2 echo "Usage: tomono [--continue]"
         exit 1
-        ;;
-esac
+    fi
+fi
 #+END_SRC
 
-Most of this rigmarole is about UI, and preventing mistakes. As you can see, there is functionally no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter: every repo name you read in, is in fact itself like a =--continue= operation.
-
-It’s horrible and kludgy but I just want to get something working out the door, for now.
+As you can see there is no difference between continuing and starting fresh, beyond =mkdir= and =git init=. At the end of the day, every repo is read in greedily, and whether you do that on an existing monorepo, or a fresh one, doesn’t matter.
 
 ** List individual branches
 
@@ -570,7 +557,7 @@ Initialization is what you’d expect from a shell script:
 #+name: init
 #+begin_src shell :references yes
 <<set-flags>>
-
+<<arg-parse>>
 <<prep-dir>>
 
 empty_tree="$(git hash-object -t tree /dev/null)"
@@ -582,6 +569,41 @@ On the other side, when done, update the working tree to whatever the current br
 #+name: finalize
 #+begin_src shell
 git checkout .
+#+end_src
+
+*** Help message / usage
+
+A simplistic arg parser, just for a sane help message in case someone needs it.
+
+#+CAPTION: arg-parse
+#+NAME: arg-parse
+#+BEGIN_SRC shell
+# Poor man’s arg parse :/
+
+print-usage () {
+    cat <<EOF
+Usage:
+
+    cat my-projects.txt | tomono
+
+For more information, see the documentation at "https://tomono.0brg.net".
+EOF
+}
+
+arg="${1-}"
+case "$arg" in
+	"")
+		# Pass
+		;;
+	"--help" | "-h" | "help")
+		print-usage
+		exit 0
+		;;
+	,*)
+		print-usage
+		exit 1
+		;;
+esac
 #+end_src
 
 *** Error flags, warnings, debug
@@ -907,7 +929,8 @@ mkdir duplicates
 We now have a =duplicates= repository with a branch /and/ tag =check-dupes=, pointing at different revisions. After including it in the monorepo:
 
 #+begin_src shell :exports code :eval never-export :results none :noweb-ref test-extra
-echo "$PWD/duplicates duplicates" | tomono --continue
+echo "$PWD/duplicates duplicates" >> my-projects.txt
+tomono < my-projects.txt
 #+end_src
 
 We should get:
