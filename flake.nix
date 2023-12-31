@@ -2,18 +2,13 @@
   description = "Migrate multiple repositories into a single monorepo";
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    gitignore = {
-      inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:hercules-ci/gitignore.nix";
-    };
   };
   outputs = {
-    self, nixpkgs, gitignore, flake-utils
+    self, nixpkgs, flake-utils
   }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        cleanSource = src: gitignore.lib.gitignoreSource (pkgs.lib.cleanSource src);
         myemacs = with pkgs; ((emacsPackagesFor emacs).emacsWithPackages (e: [
           e.dash
           e.htmlize
@@ -25,7 +20,7 @@
             default = pkgs.stdenv.mkDerivation {
               pname = "tomono";
               version = "2.0.0";
-              src = cleanSource ./.;
+              src = pkgs.lib.cleanSource ./.;
               buildPhase = ''
                 # Remove the stale VCS copy
                 rm -f tomono
