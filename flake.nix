@@ -26,9 +26,14 @@
                 rm -f tomono
                 ${myemacs}/bin/emacs -Q --script ./publish.el
               '';
+              # If you want to put the test program in the final bin
+              keepTest = false;
               installPhase = ''
                 mkdir -p $out/{bin,doc}
                 cp tomono $out/bin/
+                if [[ "$keepTest" -eq 1 ]]; then
+                  cp test $out/bin/tomono-test
+                fi
                 cp index.html style.css $out/doc
               '';
               nativeBuildInputs = [ pkgs.makeWrapper ];
@@ -47,6 +52,8 @@
             # For distribution outside of Nix
             dist = self.packages.${system}.default.overrideAttrs (_: {
               dontFixup = true;
+              # This doesn’t make sense but it makes CI easier and who cares.
+              keepTest = true;
             });
           };
           checks.default =
@@ -56,8 +63,7 @@
               # patching of the main derivation, so I can just immediately call
               # it.
               tomono-test = self.packages.${system}.default.overrideAttrs (_: {
-                pname = "tomono-test";
-                installPhase = "mkdir -p $out/bin; cp test $out/bin/tomono-test";
+                keepTest = true;
               });
             in
               pkgs.stdenv.mkDerivation (_: {

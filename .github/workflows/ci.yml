@@ -39,13 +39,47 @@ jobs:
       -
         name: Create artifact bundle
         run: |
-          (cd result/bin && tar cvf $OLDPWD/artifacts.tar tomono)
-          (cd result/doc && tar rvf $OLDPWD/artifacts.tar index.html style.css)
+          (cd result/bin && tar cvf $OLDPWD/executables.tar *)
+          (cd result/doc && tar cvf $OLDPWD/website.tar index.html style.css)
       -
         uses: actions/upload-artifact@v3
+        name: "Upload website artifacts"
         with:
-          name: bundle-${{github.sha}}
-          path: artifacts.tar
+          name: website-${{github.sha}}
+          path: website.tar
+      -
+        uses: actions/upload-artifact@v3
+        name: "Upload binary artifacts"
+        with:
+          name: executables-${{github.sha}}
+          path: executables.tar
+
+  test-nonix:
+    timeout-minutes: 10
+    name: "Test stand-alone binary without Nix"
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.config }}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: executables-${{github.sha}}
+      - name: Unpack artifacts
+        run: |
+          tar xvf executables.tar
+          rm -f executables.tar
+      - name: configure git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "<>"
+      - name: Run tests
+        run: |
+          ./tomono-test
 
   deploy_pages:
     timeout-minutes: 10
@@ -64,16 +98,16 @@ jobs:
       -
         uses: actions/download-artifact@v3
         with:
-          name: bundle-${{github.sha}}
+          name: website-${{github.sha}}
       - name: Unpack artifacts
         run: |
-          tar xvf artifacts.tar index.html style.css
-          rm -f artifacts.tar
+          tar xvf website.tar
+          rm -f website.tar
       -
         name: configure git
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "<>"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "<>"
       -
         name: "Commit the HTML to gh-pages branch"
         run: |
