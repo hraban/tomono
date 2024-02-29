@@ -597,8 +597,13 @@ every command before it gets executed.
 #+NAME: set-flags
 #+BEGIN_SRC shell
 set -euo pipefail ${DEBUGSH+-x}
-shopt -s inherit_errexit
+
+if ((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4))); then
+	shopt -s inherit_errexit
+fi
 #+END_SRC
+
+Also contains a monstrosity which is essentially a version guard around the =inherit_errexit= option, which was only introduced in Bash 4.4. Notably Mac’s default bash doesn’t support it so the version guard is useful.
 
 *** Windows newline fix
 
@@ -795,9 +800,9 @@ The examples from this document can be combined into a test script:
 
 #+name: test
 #+BEGIN_SRC shell :tangle test :shebang "#!/usr/bin/env bash" :noweb yes :references yes
-set -xeuo pipefail
-shopt -s inherit_errexit
-shopt -s globstar
+<<set-flags>>
+# In tests always echo the command:
+set -x
 export DEBUGSH=true
 
 # The tomono script is tangled right next to the test script
@@ -834,37 +839,37 @@ EOF
 
 echo "Checking master"
 git checkout master
-diff -u <(head **/*.*) <(cat <<EOF
-==> foo/i-am-foo.txt <==
+diff -u <(find . -name '*.txt' | sort | xargs head) <(cat <<EOF
+==> ./foo/i-am-foo.txt <==
 This is foo
 
-==> lib/zim/i-am-zim.txt <==
+==> ./lib/zim/i-am-zim.txt <==
 This is zim
 
-==> 中文/你好.txt <==
+==> ./中文/你好.txt <==
 你好
 EOF
 )
 
 echo "Checking branch-a"
 git checkout branch-a
-diff -u <(head **/*.*) <(cat <<EOF
-==> foo/feature-a.txt <==
+diff -u <(find . -name '*.txt' | sort | xargs head) <(cat <<EOF
+==> ./foo/feature-a.txt <==
 I am a new foo feature
 
-==> foo/i-am-foo.txt <==
+==> ./foo/i-am-foo.txt <==
 This is foo
 
-==> lib/zim/feature-a.txt <==
+==> ./lib/zim/feature-a.txt <==
 I am a new zim feature
 
-==> lib/zim/i-am-zim.txt <==
+==> ./lib/zim/i-am-zim.txt <==
 This is zim
 
-==> 中文/feature-a.txt <==
+==> ./中文/feature-a.txt <==
 你好 from feature-a
 
-==> 中文/你好.txt <==
+==> ./中文/你好.txt <==
 你好
 EOF
 )
