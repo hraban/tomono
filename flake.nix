@@ -39,6 +39,7 @@
               '';
               meta = {
                 license = pkgs.lib.licenses.agpl3Only;
+                mainProgram = "tomono";
                 homepage = "https://tomono.0brg.net";
                 description =  "Migrate multiple repositories into a single monorepo";
               };
