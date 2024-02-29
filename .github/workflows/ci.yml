@@ -93,8 +93,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: gh-pages
-      - name: Remove files before artifact download
-        run: rm -f artifacts.tar
       -
         uses: actions/download-artifact@v4
         with:
