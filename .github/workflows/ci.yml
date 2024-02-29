@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@v9
       - name: Configure Nix cache
@@ -42,13 +42,13 @@ jobs:
           (cd result/bin && tar cvf $OLDPWD/executables.tar *)
           (cd result/doc && tar cvf $OLDPWD/website.tar index.html style.css)
       -
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         name: "Upload website artifacts"
         with:
           name: website-${{github.sha}}
           path: website.tar
       -
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         name: "Upload binary artifacts"
         with:
           name: executables-${{github.sha}}
@@ -66,7 +66,7 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.config }}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: executables-${{github.sha}}
       - name: Unpack artifacts
@@ -90,13 +90,13 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
       - name: Remove files before artifact download
         run: rm -f artifacts.tar
       -
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: website-${{github.sha}}
       - name: Unpack artifacts
