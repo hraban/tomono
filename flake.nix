@@ -69,12 +69,6 @@
               pkgs.stdenv.mkDerivation (_: {
                 pname = "tomono-check";
                 version = "1.0";
-                env = {
-                  GIT_AUTHOR_NAME = "Test";
-                  GIT_AUTHOR_EMAIL = "test@test.com";
-                  GIT_COMMITTER_NAME = "Test";
-                  GIT_COMMITTER_EMAIL = "test@test.com";
-                };
                 nativeBuildInputs = [
                   # The actual code being tested. Must be in PATH.
                   self.packages.${system}.default
