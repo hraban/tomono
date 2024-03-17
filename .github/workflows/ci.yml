@@ -6,9 +6,6 @@ name: "CI/CD"
     branches: ["**"]
     tags: ["**"]
 
-env:
-  DOCKER_BUILDKIT: 1
-
 defaults:
   run:
     # For the windows phase
