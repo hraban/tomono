@@ -14,4 +14,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v9
       -
         name: "Test: integration test"
-        run: nix flake check
+        run: nix flake check --print-build-logs
