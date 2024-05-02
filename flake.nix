@@ -17,7 +17,8 @@
       in
         {
           packages = {
-            default = pkgs.stdenv.mkDerivation {
+            # Build the actual application from its org-mode source using Emacs.
+            fromsrc = pkgs.stdenv.mkDerivation {
               pname = "tomono";
               version = "2.0.0";
               src = pkgs.lib.cleanSource ./.;
@@ -49,8 +50,15 @@
                 description =  "Migrate multiple repositories into a single monorepo";
               };
             };
+            # A very simple and light-weight derivation which relies on the
+            # pre-built source being checked in to the repository. Which it is,
+            # so that’s easy.
+            default = pkgs.writeShellApplication {
+              name = "tomono";
+              text = builtins.readFile ./tomono;
+            };
             # For distribution outside of Nix
-            dist = self.packages.${system}.default.overrideAttrs (_: {
+            dist = self.packages.${system}.fromsrc.overrideAttrs (_: {
               dontFixup = true;
               # This doesn’t make sense but it makes CI easier and who cares.
               keepTest = true;
@@ -62,7 +70,7 @@
               # alone. This can reuse the git path baking and the shebang
               # patching of the main derivation, so I can just immediately call
               # it.
-              tomono-test = self.packages.${system}.default.overrideAttrs (_: {
+              tomono-test = self.packages.${system}.fromsrc.overrideAttrs (_: {
                 keepTest = true;
               });
             in
@@ -71,7 +79,7 @@
                 version = "1.0";
                 nativeBuildInputs = [
                   # The actual code being tested. Must be in PATH.
-                  self.packages.${system}.default
+                  self.packages.${system}.fromsrc
                 ];
                 dontUnpack = true;
                 buildPhase = ''
