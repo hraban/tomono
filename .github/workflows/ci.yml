@@ -31,9 +31,6 @@ jobs:
         name: "Test: integration test"
         run: nix flake check
       -
-        name: "Test: vendored script equals build"
-        run: diff -u ./tomono result/bin/tomono
-      -
         name: Create artifact bundle
         run: |
           (cd result/bin && tar cvf $OLDPWD/executables.tar *)

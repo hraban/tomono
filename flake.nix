@@ -84,6 +84,8 @@
                 dontUnpack = true;
                 buildPhase = ''
                   ${tomono-test}/bin/tomono-test
+                  # Check the vendored script is up to date
+                  ${pkgs.diffutils}/bin/diff -u ${./tomono} ${self.packages.${system}.dist}/bin/tomono
                 '';
                 # To keep Nix happy
                 installPhase = "echo done > $out";
