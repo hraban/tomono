@@ -102,3 +102,10 @@ jobs:
           git add -A
           git commit -m "Update gh-pages from ${{github.ref}} @ ${{github.sha}}"
           git push origin gh-pages
+
+  nocommit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nobssoftware/nocommit@v1
+        name: "nocommit checker"
