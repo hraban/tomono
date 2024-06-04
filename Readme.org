@@ -400,19 +400,39 @@ This is the money shot.
 #+CAPTION: handle-branch
 #+NAME: handle-branch
 #+BEGIN_SRC shell
+<<move-files-to-subdirectory>>
 <<ensure-on-target-branch-in-monorepo>>
 
 git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
 tree="$(git write-tree)"
-commit="$(git commit-tree \
+merge_commit="$(git commit-tree \
     "$tree" \
     -p "$branch" \
-    -p "refs/remotes/$reponame/$branch" \
+    -p "$move_commit" \
     -m "Merge $reponame/$branch")"
-git reset -q "$commit"
+git reset -q "$merge_commit"
 #+END_SRC
 
 Source: [[https://git-scm.com/book/en/v2/Git-Internals-Git-Objects]]
+
+*** Move files to a subdirectory
+
+The files are moved in a separate, isolated pre-merge step: this helps keep the merge commit a "pure" merge and helps =git log --follow= heuristics.
+
+#+name: move-files-to-subdirectory
+#+caption: move-files-to-subdirectory
+#+begin_src shell
+git read-tree "$empty_tree"
+git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
+tree="$(git write-tree)"
+move_commit="$(git commit-tree \
+    "$tree" \
+    -p "refs/remotes/$reponame/$branch" \
+    -m "Move all files to $repopath/")"
+#+end_src
+
+Source: https://stackoverflow.com/a/17440474/4359699
+
 
 *** Ensure we are on the right branch
 
@@ -424,10 +444,10 @@ We are given the variable =$branch= which is the final name of the branch we wan
 #+NAME: ensure-on-target-branch-in-monorepo
 #+BEGIN_SRC shell
 if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-    tree="$(git commit-tree \
+    root_commit="$(git commit-tree \
         "$empty_tree" \
         -m "Root commit for monorepo branch $branch")"
-    git branch -- "$branch" "$tree"
+    git branch -- "$branch" "$root_commit"
 fi
 git symbolic-ref HEAD "refs/heads/$branch"
 git reset -q

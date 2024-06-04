@@ -64,23 +64,30 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     git fetch --atomic "$reponame"
     
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do
+        git read-tree "$empty_tree"
+        git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
+        tree="$(git write-tree)"
+        move_commit="$(git commit-tree \
+            "$tree" \
+            -p "refs/remotes/$reponame/$branch" \
+            -m "Move all files to $repopath/")"
         if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-            tree="$(git commit-tree \
+            root_commit="$(git commit-tree \
                 "$empty_tree" \
                 -m "Root commit for monorepo branch $branch")"
-            git branch -- "$branch" "$tree"
+            git branch -- "$branch" "$root_commit"
         fi
         git symbolic-ref HEAD "refs/heads/$branch"
         git reset -q
         
         git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
         tree="$(git write-tree)"
-        commit="$(git commit-tree \
+        merge_commit="$(git commit-tree \
             "$tree" \
             -p "$branch" \
-            -p "refs/remotes/$reponame/$branch" \
+            -p "$move_commit" \
             -m "Merge $reponame/$branch")"
-        git reset -q "$commit"
+        git reset -q "$merge_commit"
     done
 done
 
