@@ -958,7 +958,7 @@ The license and copyright attribution of this entire document can now be set:
 #+CAPTION: copyright
 #+NAME: copyright
 #+BEGIN_SRC fundamental
-Copyright © 2020, 2022, 2023 Hraban Luyat
+Copyright © 2020, 2022–2024 Hraban Luyat
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
