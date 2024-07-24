@@ -26,7 +26,7 @@
               buildPhase = ''
                 # Remove the stale VCS copy
                 rm -f tomono
-                ${myemacs}/bin/emacs -Q --script ./publish.el
+                emacs -Q --script ./publish.el
               '';
               # If you want to put the test program in the final bin
               keepTest = false;
@@ -38,7 +38,7 @@
                 fi
                 cp index.html style.css $out/doc
               '';
-              nativeBuildInputs = [ pkgs.makeWrapper ];
+              nativeBuildInputs = [ pkgs.makeWrapper myemacs ];
               preFixup = ''
                 for f in $out/bin/* ; do
                     wrapProgram "$f" --suffix PATH : "${pkgs.git}/bin"
@@ -81,12 +81,13 @@
                 nativeBuildInputs = [
                   # The actual code being tested. Must be in PATH.
                   self.packages.${system}.fromsrc
+                  pkgs.diffutils
                 ];
                 dontUnpack = true;
                 buildPhase = ''
                   ${tomono-test}/bin/tomono-test
                   # Check the vendored script is up to date
-                  ${pkgs.diffutils}/bin/diff -u ${./tomono} ${self.packages.${system}.dist}/bin/tomono
+                  diff -u ${./tomono} ${self.packages.${system}.dist}/bin/tomono
                 '';
                 # To keep Nix happy
                 installPhase = "echo done > $out";
