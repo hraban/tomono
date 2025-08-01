@@ -64,6 +64,9 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     git fetch --atomic "$reponame"
     
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do
+        if [[ "$branch" == "HEAD" ]]; then
+            continue
+        fi
         git read-tree "$empty_tree"
         git read-tree --prefix "$repopath" "refs/remotes/$reponame/$branch"
         tree="$(git write-tree)"
