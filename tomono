@@ -61,6 +61,7 @@ while IFS=$'\r'"$IFS" read -r repourl reponame repopath; do
     git remote add "$reponame" "$repourl"
     git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
     git config "remote.$reponame.tagOpt" --no-tags
+    git config "remote.$reponame.followRemoteHEAD" never
     git fetch --atomic "$reponame"
     
     git branch -r --no-color --list "$reponame/*" --format "%(refname:lstrip=3)" | while read -r branch ; do

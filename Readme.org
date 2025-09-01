@@ -380,6 +380,7 @@ Every repository is fetched and fully handled individually, and sequentially:
 git remote add "$reponame" "$repourl"
 git config --add "remote.$reponame.fetch" "+refs/tags/*:refs/tags/$reponame/*"
 git config "remote.$reponame.tagOpt" --no-tags
+git config "remote.$reponame.followRemoteHEAD" never
 git fetch --atomic "$reponame"
 
 <<list-branches>> | while read -r branch ; do
@@ -390,6 +391,17 @@ done
 The remotes are configured to make sure that a default fetch always fetch all tags, and also puts them in their own namespace. The default refspec for tags is =+refs/tags/*:refs/tags/*=, as you can see that puts everything from the remote at the same level in your monorepo. Obviously that will cause clashes, so we add the reponame as an extra namespace.
 
 The =--no-tags= option is the complement to =--tags=, which has that default refspec we don’t want. That’s why we disable it and roll our own, entirely.
+
+Starting around git v2.48.1, git will automatically add a remote tracking HEAD reference which points at the remote master.  For the purposes of tomono all branches are created equal and we don’t care which branch is master.  Otherwise, the HEAD reference would get in the way.  Example:
+
+#+begin_src shell :exports code :eval never-export :results none :noweb-ref test-extra
+
+(
+  cd core
+  reponame=foo
+  <<list-branches>> | grep -v HEAD
+)
+#+end_src
 
 ** Per branch (this is where the magic happens)
 
