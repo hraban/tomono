@@ -825,6 +825,9 @@ The examples from this document can be combined into a test script:
 set -x
 export DEBUGSH=true
 
+# Deterministic sorting
+export LC_ALL=C
+
 # The tomono script is tangled right next to the test script
 export PATH="$PWD:$PATH"
 
