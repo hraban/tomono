@@ -953,7 +953,7 @@ echo "$PWD/duplicates duplicates" | tomono --continue
 
 We should get:
 
-#+begin_src shell :exports both :eval never-exports :results none :noweb-ref test-extra
+#+begin_src shell :exports both :eval never-export :results none :noweb-ref test-extra
 (
   cd core
   git checkout check-dupes
