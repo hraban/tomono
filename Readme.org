@@ -49,11 +49,42 @@ Concrete example:
 $ cat my-repos.txt | /path/to/tomono
 #+end_src
 
-That should be all ✅.
-
 #+begin_comment
 Yes #uselessuseofcat but it is clearer than < > ! # $) &&*!&♨±⌘︎ to newbies.
 #+end_comment
+
+You are also recommended to fetch all git remotes in new repository to update your local state. 
+
+If you used the default settings the folder will be named =core= otherwise it will be the value set for MONOREPO_NAME.
+
+#+begin_src shell :exports code
+$ cd core
+$ git fetch --all
+#+end_src
+
+Fetching all remotes provides Git information required to merge or rebase branches if desired and ensures that when you try to pull in changes everything works as expected.
+
+That should be all ✅.
+
+** Handling Existing Branches
+
+If you run the script with the full remote path you will notice the script pulled down several remote branches. As part of the merging process each remote's branches are fetched and attempted to be merged togther in the new repository. 
+
+This branch merging process specifically only occurs when merging in new repositories using the script and will not appear when pulling in changes from a remote.
+
+However if you attempt to push these branches up to a Git host such a Github you will see the branches most likely will show several changes ahead and hundreds to thousands of commits behind depending on your repository size. This is expected and is simply due to the branch merging strategy.
+
+To pull in changes from branches you have a few potential approaches:
+
+1. [[** Pull in new changes from a remote instead][Merge branches upstream and merge the changes]]
+  This approach can be the easiest if you plan to gradually move to the monorepo. You can continue to make changes in the origin repository and treat the monorepo as a readonly copy until you wish to migrate if you wish.
+  You may wish to not push up the merged branches at all or delete remote branches from the monorepo that may have been pushed up as part of the merge.
+2. Fetch origins and merge existing branches against the default branch
+  This approach is best when you have already pushed up branches that others may be working on. It will allow branches to be merged while having more branch commits.
+3. Fetch origins and rebase existing branches against the default branch
+  This approach is best when you have branches that have not been pushed up. This approach will remove more commits but will rewrite history for others, please rebase responsibly.
+
+The best approach to take depends on each project so there is no preferred approach. Please keep in mind that the more conflicting changes are made between the original repositories and the monorepo the messier it will be to clean up changes between the two.
 
 ** Custom name for monorepo directory
 
